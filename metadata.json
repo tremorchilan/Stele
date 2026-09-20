@@ -1,0 +1,6 @@
+{
+  "name": "Stele",
+  "description": "Federated, offline-first institutional operating system and student commitment ledger featuring clay, glass, and flat materials.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
