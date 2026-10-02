@@ -161,7 +161,7 @@ export const RadarSavedTasksView: React.FC<RadarSavedTasksViewProps> = ({
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-[6px] bg-[var(--canvas)] border border-[var(--rule-default)] text-[var(--accent)]">
+                  <span className="pill pill-sm">
                     {query.scope}
                   </span>
                   <span className="text-[11px] text-[var(--text-secondary)]">
@@ -225,10 +225,8 @@ export const RadarSavedTasksView: React.FC<RadarSavedTasksViewProps> = ({
                 key={f.id}
                 type="button"
                 onClick={() => setSelectedFilter(f.id as any)}
-                className={`px-3 py-1 rounded-[8px] text-[11.5px] font-bold transition-all cursor-pointer ${
-                  selectedFilter === f.id
-                    ? 'bg-[var(--accent)] text-white shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                className={`chip chip-sm cursor-pointer ${
+                  selectedFilter === f.id ? 'on' : ''
                 }`}
               >
                 {f.label}

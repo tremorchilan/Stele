@@ -377,7 +377,7 @@ export const YourProfileSection: React.FC<YourProfileSectionProps> = ({
           </div>
 
           {/* Physical Perks In-Campus Utility Banner */}
-          <div className="p-3.5 rounded-[16px] bg-gradient-to-r from-[var(--stele-accent-soft)] via-[var(--stele-surface)] to-[var(--stele-surface)] border border-[var(--stele-accent)]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-3.5 rounded-[16px] bg-[var(--stele-surface)] border border-[var(--stele-accent)]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-[12px] bg-[var(--stele-accent-soft)] border border-[var(--stele-accent)]/40 flex items-center justify-center text-[var(--stele-accent)] shrink-0">
                 <Coffee className="w-5 h-5" />
@@ -387,7 +387,7 @@ export const YourProfileSection: React.FC<YourProfileSectionProps> = ({
                   <span className="text-[13px] font-extrabold text-[var(--stele-text-primary)]">
                     In-Campus Physical Perks Bazaar
                   </span>
-                  <span className="px-1.5 py-0.2 rounded-[6px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9.5px] font-bold uppercase">
+                  <span className="px-1.5 py-0.2 rounded-[6px] bg-[var(--stele-surface-elevated)] text-[var(--stele-text-secondary)] border border-[var(--stele-rule)] text-[9.5px] font-semibold uppercase">
                     Physical Utility
                   </span>
                 </div>

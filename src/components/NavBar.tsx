@@ -17,40 +17,41 @@ interface RibbonItemData {
   title: string;
   icon: string;
   bg: string;
+  color?: string;
 }
 
 const TAB_RIBBON_ITEMS: Record<NavTab, RibbonItemData[]> = {
   home: [
-    { title: 'Recent Notices', icon: '◍', bg: 'rgba(77,126,247,.15)' },
-    { title: 'Weekly Schedule', icon: '✦', bg: 'rgba(224,168,58,.15)' },
-    { title: 'Closing Soon', icon: '⬢', bg: 'rgba(232,122,61,.15)' },
+    { title: 'Recent Notices', icon: '◍', bg: '#0284C7', color: '#FFFFFF' },
+    { title: 'Weekly Schedule', icon: '✦', bg: '#F59E0B', color: '#0F172A' },
+    { title: 'Closing Soon', icon: '⬢', bg: '#EF4444', color: '#FFFFFF' },
   ],
   radar: [
-    { title: 'Federation Feed', icon: '◍', bg: 'rgba(77,126,247,.15)' },
-    { title: 'My Tracked Keywords', icon: '✦', bg: 'rgba(224,168,58,.15)' },
-    { title: 'Saved Discovery Tasks', icon: '⬣', bg: 'rgba(61,177,110,.15)' },
+    { title: 'Federation Feed', icon: '◍', bg: '#0284C7', color: '#FFFFFF' },
+    { title: 'My Tracked Keywords', icon: '✦', bg: '#F59E0B', color: '#0F172A' },
+    { title: 'Saved Discovery Tasks', icon: '⬣', bg: '#10B981', color: '#FFFFFF' },
   ],
   board: [
-    { title: 'Active Commitments', icon: '⬣', bg: 'rgba(61,177,110,.15)' },
-    { title: 'Watched List', icon: '✦', bg: 'rgba(224,168,58,.15)' },
-    { title: 'Historical Archive', icon: '◍', bg: 'rgba(77,126,247,.15)' },
+    { title: 'Active Commitments', icon: '⬣', bg: '#10B981', color: '#FFFFFF' },
+    { title: 'Watched List', icon: '✦', bg: '#F59E0B', color: '#0F172A' },
+    { title: 'Historical Archive', icon: '◍', bg: '#0284C7', color: '#FFFFFF' },
   ],
   campus: [
-    { title: 'Calm Dispatches', icon: '💬', bg: 'rgba(56,189,248,.2)' },
-    { title: 'Physical Perks Bazaar', icon: '☕', bg: 'rgba(245,158,11,.2)' },
-    { title: 'Clubs & Societies', icon: '✦', bg: 'rgba(224,168,58,.15)' },
-    { title: 'Classes & Timetable', icon: '⬣', bg: 'rgba(61,177,110,.15)' },
-    { title: 'Resources & Syllabi', icon: '⬢', bg: 'rgba(232,122,61,.15)' },
+    { title: 'Messenger', icon: '💬', bg: '#0284C7', color: '#FFFFFF' },
+    { title: 'Physical Perks Bazaar', icon: '☕', bg: '#F59E0B', color: '#0F172A' },
+    { title: 'Clubs & Societies', icon: '✦', bg: '#8B5CF6', color: '#FFFFFF' },
+    { title: 'Classes & Timetable', icon: '⬣', bg: '#10B981', color: '#FFFFFF' },
+    { title: 'Resources & Syllabi', icon: '⬢', bg: '#EF4444', color: '#FFFFFF' },
   ],
   dispatches: [
-    { title: 'Common Channels', icon: '◍', bg: 'rgba(56,189,248,.2)' },
-    { title: 'Private DMs', icon: '🔒', bg: 'rgba(168,85,247,.2)' },
-    { title: 'Friend Index & QR', icon: '👥', bg: 'rgba(16,185,129,.2)' },
-    { title: 'Catch-up Digest', icon: '⚡', bg: 'rgba(245,158,11,.2)' },
+    { title: 'Common Channels', icon: '◍', bg: '#0284C7', color: '#FFFFFF' },
+    { title: 'Private DMs', icon: '🔒', bg: '#8B5CF6', color: '#FFFFFF' },
+    { title: 'Friend Index & QR', icon: '👥', bg: '#10B981', color: '#FFFFFF' },
+    { title: 'Catch-up Digest', icon: '⚡', bg: '#F59E0B', color: '#0F172A' },
   ],
   bazaar: [
-    { title: 'All Physical Perks', icon: '☕', bg: 'rgba(245,158,11,.2)' },
-    { title: 'My Claimed Vouchers', icon: '🎟️', bg: 'rgba(56,189,248,.2)' },
+    { title: 'All Physical Perks', icon: '☕', bg: '#F59E0B', color: '#0F172A' },
+    { title: 'My Claimed Vouchers', icon: '🎟️', bg: '#0284C7', color: '#FFFFFF' },
   ],
 };
 
@@ -82,7 +83,7 @@ export const NavBar: React.FC<NavBarProps> = ({
                   tabIndex={0}
                   onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelectRibbonItem(item.title)}
                 >
-                  <div className="ribbon-ico" style={{ background: item.bg }}>
+                  <div className="ribbon-ico font-bold shadow-xs" style={{ background: item.bg, color: item.color || '#FFFFFF' }}>
                     {item.icon}
                   </div>
                   <span>{item.title}</span>

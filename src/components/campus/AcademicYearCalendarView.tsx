@@ -245,37 +245,37 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
       case 'off_day':
         return {
           label: 'Off-Day / Holiday',
-          dot: 'bg-emerald-500',
-          bg: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+          dot: 'bg-white',
+          bg: 'bg-[#10B981] text-white border-[#059669] shadow-xs font-bold',
           icon: Coffee,
         };
       case 'exam':
         return {
           label: 'Examination Period',
-          dot: 'bg-rose-500',
-          bg: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+          dot: 'bg-white',
+          bg: 'bg-[#EF4444] text-white border-[#DC2626] shadow-xs font-bold',
           icon: GraduationCap,
         };
       case 'deadline':
         return {
           label: 'Academic Cutoff',
-          dot: 'bg-amber-500',
-          bg: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+          dot: 'bg-[#0F172A]',
+          bg: 'bg-[#F59E0B] text-[#0F172A] border-[#D97706] shadow-xs font-bold',
           icon: Clock,
         };
       case 'recess':
         return {
           label: 'Campus Recess',
-          dot: 'bg-purple-500',
-          bg: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+          dot: 'bg-white',
+          bg: 'bg-[#8B5CF6] text-white border-[#7C3AED] shadow-xs font-bold',
           icon: Sparkles,
         };
       case 'milestone':
       default:
         return {
           label: 'Term Milestone',
-          dot: 'bg-sky-500',
-          bg: 'bg-sky-500/15 text-sky-400 border-sky-500/30',
+          dot: 'bg-white',
+          bg: 'bg-[#0284C7] text-white border-[#0369A1] shadow-xs font-bold',
           icon: CalendarCheck,
         };
     }
@@ -299,7 +299,7 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
               <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)] font-mono">
                 Federation Registry &amp; Registrar Stream
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-emerald-500/15 text-emerald-400 font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[var(--elevated)] border border-[var(--rule-default)] text-[var(--text-secondary)] font-semibold">
                 Timetable Synced
               </span>
             </div>
@@ -315,10 +315,10 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
             <button
               type="button"
               onClick={onOpenUnifiedCalendar}
-              className="px-3.5 py-1.5 rounded-[12px] bg-sky-500/15 border border-sky-500/35 text-sky-400 text-[12.5px] font-bold hover:bg-sky-500/25 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-3.5 py-1.5 rounded-[12px] bg-[var(--card)] border border-[var(--rule-default)] hover:border-[var(--accent)] text-[var(--text-primary)] text-[12.5px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
               title="Open Unified Calendar with Academic Events, Tasks, and Opportunity Deadlines"
             >
-              <CalendarCheck className="w-3.5 h-3.5" />
+              <CalendarCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>Open Unified Calendar</span>
             </button>
           )}
@@ -339,7 +339,7 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
             className="px-3 py-1.5 rounded-[12px] bg-[var(--card)] border border-[var(--rule-default)] text-[var(--text-primary)] hover:border-[var(--accent)] text-[12.5px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
             title="Copy subscription webcal URL"
           >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Link className="w-3.5 h-3.5" />}
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-[var(--accent)]" /> : <Link className="w-3.5 h-3.5" />}
             <span>{copiedLink ? 'Copied' : 'Webcal Sync'}</span>
           </button>
         </div>
@@ -348,8 +348,8 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
       {/* 3-Way Synchronization Assurance Strip */}
       <div className="p-3.5 px-4 rounded-[18px] bg-[var(--card)] border border-[var(--rule-default)] grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-[10px] bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-[10px] bg-[var(--track)] border border-[var(--rule-default)] text-[var(--text-primary)] flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div>
             <span className="text-[12px] font-bold text-[var(--text-primary)] block">
@@ -362,15 +362,15 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-[10px] bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0">
-            <CalendarCheck className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-[10px] bg-[var(--track)] border border-[var(--rule-default)] text-[var(--text-primary)] flex items-center justify-center shrink-0">
+            <CalendarCheck className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-bold text-[var(--text-primary)]">
                 2. In-App Personal Board
               </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] bg-emerald-500/20 text-emerald-400">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] bg-[var(--elevated)] border border-[var(--rule-default)] text-[var(--text-secondary)]">
                 Live Active
               </span>
             </div>
@@ -381,15 +381,15 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-[10px] bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-[10px] bg-[var(--track)] border border-[var(--rule-default)] text-[var(--text-primary)] flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div>
             <span className="text-[12px] font-bold text-[var(--text-primary)] block">
               3. Time-Stamped Circulars
             </span>
             <span className="text-[11px] text-[var(--text-secondary)]">
-              Official circulars synchronized directly from Calm Dispatch.
+              Official circulars synchronized directly from Messenger.
             </span>
           </div>
         </div>
@@ -715,10 +715,10 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
                     {selectedDateNotices.map((notice) => (
                       <div
                         key={notice.id}
-                        className="p-3 rounded-[14px] bg-sky-500/10 border border-sky-500/20 flex flex-col gap-1.5"
+                        className="p-3 rounded-[14px] bg-[var(--elevated)] border border-[var(--rule-default)] flex flex-col gap-1.5"
                       >
                         <div className="flex items-center justify-between text-[10.5px]">
-                          <span className="font-bold text-sky-400 font-mono">
+                          <span className="font-bold text-[var(--accent)] font-mono">
                             {notice.referenceNumber}
                           </span>
                           <span className="text-[var(--text-secondary)] font-mono">
@@ -733,8 +733,8 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
                         </p>
 
                         {notice.actionableTask && (
-                          <div className="mt-1 flex items-center justify-between pt-1.5 border-t border-sky-500/20">
-                            <span className="text-[10.5px] text-amber-400 font-semibold truncate max-w-[170px]">
+                          <div className="mt-1 flex items-center justify-between pt-1.5 border-t border-[var(--rule-default)]">
+                            <span className="text-[10.5px] text-[var(--amber)] font-semibold truncate max-w-[170px]">
                               Task: {notice.actionableTask.title}
                             </span>
                             <button
@@ -764,14 +764,14 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
                 )}
               </div>
 
-              {/* Quick Jump to Calm Dispatch button */}
+              {/* Quick Jump to Messenger button */}
               <div className="mt-4 pt-3 border-t border-[var(--rule-default)] flex justify-end">
                 <button
                   type="button"
                   onClick={onOpenDispatches}
                   className="text-[12px] font-bold text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <span>Open Full Calm Dispatch Stream</span>
+                  <span>Open Full Messenger Stream</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -878,7 +878,7 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
                         ? `${new Date(evt.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${new Date(evt.endDate! + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
                         : new Date(evt.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
                     </span>
-                    <span className="text-[11px] text-emerald-400 flex sm:justify-end items-center gap-1 mt-0.5 font-medium">
+                    <span className="text-[11px] text-[var(--accent)] flex sm:justify-end items-center gap-1 mt-0.5 font-medium">
                       <Check className="w-3 h-3" /> Synchronized
                     </span>
                   </div>
@@ -895,8 +895,8 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
           <div className="p-4 rounded-[18px] bg-[var(--card)] border border-[var(--rule-default)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-sky-400" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-sky-400 font-mono">
+                <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)] font-mono">
                   Sovereign Dispatch Ledger
                 </span>
               </div>
@@ -904,7 +904,7 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
                 Time-Stamped Official Decrees &amp; Administrative Circulars
               </h2>
               <p className="text-[12.5px] text-[var(--text-secondary)] mt-0.5">
-                Extracted verbatim from the Calm Dispatch verified broadcast stream. Timestamped with cryptographic integrity.
+                Extracted verbatim from the Messenger verified broadcast stream. Timestamped with cryptographic integrity.
               </p>
             </div>
 
@@ -913,7 +913,7 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
               onClick={onOpenDispatches}
               className="px-3.5 py-2 rounded-[12px] bg-[var(--accent)] text-white text-[12.5px] font-bold hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-xs"
             >
-              <span>Go to Calm Dispatch Chat</span>
+              <span>Go to Messenger Chat</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -922,21 +922,21 @@ export const AcademicYearCalendarView: React.FC<AcademicYearCalendarViewProps> =
             {officialNotices.map((notice) => (
               <div
                 key={notice.id}
-                className="p-5 rounded-[20px] bg-[var(--card)] border border-[var(--rule-default)] hover:border-sky-500/40 transition-all shadow-xs flex flex-col gap-3"
+                className="p-5 rounded-[20px] bg-[var(--card)] border border-[var(--rule-default)] hover:border-[var(--accent)] transition-all shadow-xs flex flex-col gap-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[var(--rule-default)]">
                   <div className="flex items-center gap-3">
                     <img
                       src={notice.senderAvatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'}
                       alt={notice.senderName}
-                      className="w-10 h-10 rounded-full object-cover border border-sky-400/40 shrink-0"
+                      className="w-10 h-10 rounded-full object-cover border border-[var(--rule-default)] shrink-0"
                     />
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-[14px] font-bold text-[var(--text-primary)]">
                           {notice.senderName}
                         </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-[4px] bg-sky-500/20 text-sky-400 flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-[4px] bg-[var(--elevated)] border border-[var(--rule-default)] text-[var(--accent)] flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" />
                           <span>Verified Issuer</span>
                         </span>

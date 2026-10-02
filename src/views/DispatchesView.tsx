@@ -44,62 +44,62 @@ export const DispatchesView: React.FC<DispatchesViewProps> = ({
   const [activePeerDM, setActivePeerDM] = useState<string | null>(null);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pb-28">
+    <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden">
       {/* Top Header Banner */}
-      <div className="p-4 sm:p-5 border-b border-[rgba(255,255,255,0.08)] bg-[var(--tile)]">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+      <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-[rgba(255,255,255,0.08)] bg-[var(--tile)] shrink-0">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
               onClick={onNavigateBack}
-              className="p-2 rounded-[12px] bg-[var(--track)] border border-[rgba(255,255,255,0.08)] text-[var(--text)] hover:border-[var(--accent)] transition-all cursor-pointer"
+              className="p-1.5 px-2.5 rounded-[10px] bg-[var(--track)] border border-[rgba(255,255,255,0.08)] text-[var(--text)] hover:-translate-y-0.5 hover:shadow-xs hover:text-[var(--accent)] transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
               title="Return to Campus"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 text-[var(--accent)]" />
+              <span className="text-[12px] font-semibold">Back to Campus</span>
             </button>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-[20px] sm:text-[24px] font-extrabold text-[var(--text)] tracking-tight">
-                  Calm Dispatches
+                <h1 className="text-[17px] sm:text-[20px] font-extrabold text-[var(--text)] tracking-tight truncate">
+                  Messenger
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-[8px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Anti-Surveillance Enclave</span>
+                <span className="px-1.5 py-0.5 rounded-[6px] bg-[var(--tile-active)] border border-[var(--rule)] text-[var(--text-sub)] text-[10.5px] font-medium tracking-wide flex items-center gap-1 shrink-0">
+                  <ShieldCheck className="w-3 h-3 text-[var(--accent)]" />
+                  <span className="hidden xs:inline">Anti-Surveillance</span>
                 </span>
               </div>
-              <p className="text-[12.5px] text-[var(--meta)] mt-0.5">
-                Institutional &amp; autonomous student communications with guaranteed privacy for informal student commons.
-              </p>
             </div>
           </div>
 
           {/* Action Header Buttons */}
-          <div className="flex items-center gap-2 self-end sm:self-center">
+          <div className="flex items-center gap-1.5 shrink-0">
             {onOpenCatchupDigest && (
               <button
                 type="button"
                 onClick={onOpenCatchupDigest}
-                className="px-3 py-1.5 rounded-[12px] bg-[var(--accent-soft)] border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white transition-all text-[12px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-2.5 py-1 rounded-[10px] bg-[var(--accent-soft)] border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white transition-all text-[11.5px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Catch-up Digest</span>
+                <span className="hidden sm:inline">Catch-up Digest</span>
+                <span className="sm:hidden">Digest</span>
               </button>
             )}
 
             <button
               type="button"
               onClick={() => setFriendIndexOpen(true)}
-              className="px-3.5 py-1.5 rounded-[12px] bg-[var(--track)] border border-[rgba(255,255,255,0.1)] text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all text-[12px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-2.5 py-1 rounded-[10px] bg-[var(--track)] border border-[rgba(255,255,255,0.1)] text-[var(--text)] hover:-translate-y-0.5 hover:shadow-xs hover:text-[var(--accent)] transition-all text-[11.5px] font-bold flex items-center gap-1.5 cursor-pointer"
             >
               <Users className="w-3.5 h-3.5 text-sky-400" />
-              <span>Friend Index &amp; QR</span>
+              <span className="hidden sm:inline">Friend Index</span>
+              <span className="sm:hidden">Friends</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Hub Body */}
-      <div className="max-w-6xl mx-auto w-full p-3 sm:p-5">
+      {/* Main Hub Body: Takes 100% of remaining height cleanly */}
+      <div className="w-full max-w-7xl mx-auto p-1 sm:p-3 flex-1 flex flex-col min-h-0 overflow-hidden">
         <CampusDispatchesHub
           channels={channels}
           messages={messages}

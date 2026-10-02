@@ -17,7 +17,7 @@ const RIBBON_ITEMS: Record<NavTab, string[]> = {
   radar: ['My interests', 'Browse', 'Saved'],
   board: ['Active', 'Watched', 'Past'],
   campus: [
-    'Calm Dispatches',
+    'Messenger',
     'Unified In-App Calendar',
     'Physical Perks Bazaar',
     'Clubs & Societies',

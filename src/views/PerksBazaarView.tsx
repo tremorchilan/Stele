@@ -94,7 +94,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
             <button
               type="button"
               onClick={onNavigateBack}
-              className="p-2 rounded-[12px] bg-[var(--track)] border border-[rgba(255,255,255,0.08)] text-[var(--text)] hover:border-[var(--accent)] transition-all cursor-pointer"
+              className="p-2 rounded-[12px] bg-[var(--track)] border border-[rgba(255,255,255,0.08)] text-[var(--text)] hover:-translate-y-0.5 hover:shadow-xs transition-all cursor-pointer"
               title="Return to Campus"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -120,7 +120,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
               <span className="text-[11px] text-[var(--meta)] font-bold uppercase">
                 Sovereign Balance:
               </span>
-              <span className="text-[17px] font-extrabold text-emerald-400 font-mono">
+              <span className="text-[17px] font-extrabold text-[var(--amber)] font-mono">
                 {profile.score} pts
               </span>
             </div>
@@ -136,26 +136,18 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('bazaar')}
-              className={`px-4 py-2 rounded-[12px] text-[13px] font-bold transition-all cursor-pointer ${
-                activeTab === 'bazaar'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'bg-[var(--tile)] text-[var(--meta)] hover:text-[var(--text)]'
-              }`}
+              className={`chip ${activeTab === 'bazaar' ? 'on' : ''}`}
             >
               Perks Catalog ({perks.length})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('my_vouchers')}
-              className={`px-4 py-2 rounded-[12px] text-[13px] font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeTab === 'my_vouchers'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'bg-[var(--tile)] text-[var(--meta)] hover:text-[var(--text)]'
-              }`}
+              className={`chip flex items-center gap-2 ${activeTab === 'my_vouchers' ? 'on' : ''}`}
             >
               <span>My Claimed Vouchers</span>
               {activeVouchers.length > 0 && (
-                <span className="px-2 py-0.2 rounded-full bg-emerald-500 text-white text-[11px] font-bold">
+                <span className="pill pill-sm urgent">
                   {activeVouchers.length} Active
                 </span>
               )}
@@ -164,7 +156,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
 
           {/* Category Filter Chips */}
           {activeTab === 'bazaar' && (
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="chips">
               {[
                 { id: 'all', label: 'All' },
                 { id: 'beverage', label: 'Café & Drinks' },
@@ -176,11 +168,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-2.5 py-1 rounded-[10px] text-[12px] font-bold transition-all cursor-pointer ${
-                    selectedCategory === cat.id
-                      ? 'bg-[var(--accent-soft)] border border-[var(--accent)] text-[var(--accent)]'
-                      : 'bg-[var(--track)] text-[var(--meta)] hover:text-[var(--text)] border border-transparent'
-                  }`}
+                  className={`chip ${selectedCategory === cat.id ? 'on' : ''}`}
                 >
                   {cat.label}
                 </button>
@@ -197,7 +185,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
               return (
                 <div
                   key={perk.id}
-                  className="p-5 rounded-[20px] bg-[var(--tile)] border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.15)] transition-all flex flex-col justify-between shadow-xs"
+                  className="p-5 rounded-[20px] bg-[var(--tile)] border border-[rgba(255,255,255,0.06)] hover:-translate-y-1 hover:shadow-lg transition-all flex flex-col justify-between shadow-xs"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-3">
@@ -216,7 +204,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className="text-[16px] font-extrabold text-emerald-400 font-mono">
+                        <span className="text-[16px] font-extrabold text-[var(--amber)] font-mono">
                           {perk.cost}
                         </span>
                         <span className="text-[11px] text-[var(--meta)] block">points</span>
@@ -269,7 +257,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
           <div className="space-y-6">
             <div>
               <h2 className="text-[16px] font-bold text-[var(--text)] mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />
                 <span>Active Unused Physical Vouchers ({activeVouchers.length})</span>
               </h2>
 
@@ -282,11 +270,11 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
                   {activeVouchers.map((voucher) => (
                     <div
                       key={voucher.id}
-                      className="p-5 rounded-[20px] bg-[var(--tile)] border-2 border-emerald-500/30 shadow-md flex flex-col justify-between"
+                      className="p-5 rounded-[20px] bg-[var(--tile)] border border-[var(--rule)] shadow-sm flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+                          <span className="text-[11px] font-bold text-[var(--accent)] uppercase tracking-wide">
                             Valid Physical Voucher
                           </span>
                           <span className="text-[11px] font-mono text-[var(--meta)]">
@@ -306,7 +294,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setSelectedVoucher(voucher)}
-                          className="px-4 py-2 rounded-[12px] bg-emerald-500 text-white text-[12.5px] font-bold hover:bg-emerald-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          className="px-4 py-2 rounded-[12px] bg-[var(--accent)] text-white text-[12.5px] font-bold hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                         >
                           <QrCode className="w-4 h-4" />
                           <span>Present QR to Counter</span>
@@ -355,7 +343,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
       {redeemConfirmPerk && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="w-full max-w-md p-6 rounded-[24px] bg-[var(--tile)] border border-[rgba(255,255,255,0.1)] shadow-2xl text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-full bg-[var(--tile-active)] border border-[var(--rule)] text-[var(--accent)] flex items-center justify-center mx-auto">
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
@@ -364,7 +352,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
               </h3>
               <p className="text-[13px] text-[var(--meta)] mt-1">
                 Claim <strong>"{redeemConfirmPerk.title}"</strong> for{' '}
-                <span className="font-bold text-emerald-400">{redeemConfirmPerk.cost} points</span>?
+                <span className="font-bold text-[var(--amber)]">{redeemConfirmPerk.cost} points</span>?
               </p>
             </div>
             <div className="p-3 rounded-[12px] bg-[var(--track)] text-[12px] text-[var(--meta)] text-left">
@@ -381,7 +369,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmRedeem}
-                className="px-5 py-2 rounded-[12px] bg-emerald-500 text-white text-[13px] font-bold hover:bg-emerald-600 shadow-md cursor-pointer"
+                className="px-5 py-2 rounded-[12px] bg-[var(--accent)] text-white text-[13px] font-bold hover:brightness-110 active:scale-95 transition-all shadow-md cursor-pointer"
               >
                 Confirm &amp; Generate QR
               </button>
@@ -459,7 +447,7 @@ export const PerksBazaarView: React.FC<PerksBazaarViewProps> = ({
                 onMarkPerkUsed?.(selectedVoucher.id);
                 setSelectedVoucher(null);
               }}
-              className="w-full py-2.5 rounded-[14px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[13px] shadow-sm cursor-pointer"
+              className="w-full py-2.5 rounded-[14px] bg-[var(--accent)] hover:brightness-110 active:scale-95 transition-all text-white font-bold text-[13px] shadow-sm cursor-pointer"
             >
               Mark Verified by Counter Staff ✓
             </button>

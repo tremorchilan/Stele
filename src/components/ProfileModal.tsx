@@ -35,13 +35,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   return (
     <div
       id="profile-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md android-popup-backdrop"
       onClick={onClose}
     >
       <div
         id="profile-modal-card"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-5 sm:p-6 rounded-[26px] stele-glassmorphic-overlay transition-all text-[var(--stele-text-primary)]"
+        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-5 sm:p-6 rounded-[26px] stele-glassmorphic-overlay text-[var(--stele-text-primary)] android-popup-widget"
         style={{
           background: 'rgba(26, 26, 32, 0.88)',
           backdropFilter: 'blur(30px) saturate(190%)',

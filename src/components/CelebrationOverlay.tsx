@@ -413,11 +413,11 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
 
       {/* Plasma Event Ambient Backdrop */}
       <div
-        className="fixed inset-0 animate-plasma opacity-90 transition-opacity pointer-events-none"
+        className="fixed inset-0 animate-plasma opacity-85 transition-opacity pointer-events-none"
         style={{
           background: isDark
-            ? 'radial-gradient(circle at 30% 30%, #6B4E9E 0%, transparent 60%), radial-gradient(circle at 70% 70%, #1B2A4A 0%, transparent 65%), radial-gradient(circle at 50% 50%, #D9A441 0%, #0E0E10 75%)'
-            : 'radial-gradient(circle at 30% 30%, #6B4E9E 0%, transparent 60%), radial-gradient(circle at 70% 70%, #1B2A4A 0%, transparent 65%), radial-gradient(circle at 50% 50%, #D9A441 0%, #F4F1EA 75%)',
+            ? 'radial-gradient(circle at 50% 40%, rgba(59, 130, 246, 0.22) 0%, transparent 70%), #131417'
+            : 'radial-gradient(circle at 50% 40%, rgba(59, 130, 246, 0.15) 0%, transparent 70%), #F5F3EF',
           filter: 'blur(45px)',
         }}
       />

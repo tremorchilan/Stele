@@ -74,101 +74,29 @@ export const RadarView: React.FC<RadarViewProps> = ({
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 overflow-hidden">
       <div className="main" id="radarMain">
-        <div id="radar-view" className="w-full max-w-4xl mx-auto pt-4 pb-16">
+        <div id="radar-view" className="w-full max-w-7xl mx-auto pt-4 pb-16">
       {/* Screen Title (PRD 6.3 Display font placement) */}
-      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 mb-6">
-        <div>
-          <h1 className="text-[24px] md:text-[28px] font-bold text-[var(--text-primary)] tracking-tight">
-            Opportunity Radar
-          </h1>
-          <p className="text-[14px] text-[var(--text-secondary)]">
-            Ordered strictly by geographic scope and deadline. No algorithmic ranking.
-          </p>
-        </div>
-
-        {/* Action Triggers */}
-        <div className="flex items-center gap-2 self-start">
-          <button
-            id="radar-unconventional-btn"
-            type="button"
-            onClick={() => onOpenUnconventionalFeatures?.()}
-            className="p-2 rounded-[14px] bg-[var(--card)] border border-[var(--rule-default)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all flex items-center gap-1.5 text-[13px] font-medium"
-            title="Unconventional Features (PRD & White Paper)"
-            aria-label="Unconventional Features"
-          >
-            <div className="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10.5px] font-bold font-serif italic leading-none">
-              i
-            </div>
-            <span className="hidden sm:inline">Rules</span>
-          </button>
-
-          {/* Browse & Filter trigger */}
-          <button
-            id="radar-browse-btn"
-            type="button"
-            onClick={() => setBrowseDrawerOpen(!browseDrawerOpen)}
-            className={`px-3.5 py-1.5 rounded-[14px] text-[13px] font-medium border flex items-center gap-1.5 transition-all ${
-              browseDrawerOpen
-                ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                : 'bg-[var(--card)] border-[var(--rule-default)] text-[var(--text-primary)] hover:border-[var(--text-primary)]'
-            }`}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            <span>Browse Filters</span>
-          </button>
-        </div>
+      <div className="mb-4">
+        <h1 className="text-[22px] md:text-[28px] font-bold text-[var(--text-primary)] tracking-tight">
+          Opportunity Radar
+        </h1>
+        <p className="text-[13px] sm:text-[14px] text-[var(--text-secondary)]">
+          Ordered strictly by geographic scope and deadline. No algorithmic ranking.
+        </p>
       </div>
 
-      {/* Sub-Page Navigation Tabs (Federation Feed, My Tracked Keywords, Saved Discovery Tasks) */}
-      <div className="flex items-center gap-1.5 p-1 rounded-[16px] bg-[var(--card)] border border-[var(--rule-default)] mb-6 overflow-x-auto no-scrollbar">
-        <button
-          type="button"
-          onClick={() => handleSwitchMode('feed')}
-          className={`flex-1 py-2 px-3.5 rounded-[12px] text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-            viewMode === 'feed'
-              ? 'bg-[var(--accent)] text-white shadow-xs'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--canvas)]'
-          }`}
-        >
-          <Compass className="w-4 h-4" />
-          <span>Federation Feed</span>
-          <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded-full ${viewMode === 'feed' ? 'bg-white/20' : 'bg-[var(--canvas)] text-[var(--text-muted)]'}`}>
-            {items.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSwitchMode('keywords')}
-          className={`flex-1 py-2 px-3.5 rounded-[12px] text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-            viewMode === 'keywords'
-              ? 'bg-[var(--accent)] text-white shadow-xs'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--canvas)]'
-          }`}
-        >
-          <Tag className="w-4 h-4" />
-          <span>My Tracked Keywords</span>
-          <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded-full ${viewMode === 'keywords' ? 'bg-white/20' : 'bg-[var(--canvas)] text-[var(--text-muted)]'}`}>
-            Live
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSwitchMode('saved')}
-          className={`flex-1 py-2 px-3.5 rounded-[12px] text-[13px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-            viewMode === 'saved'
-              ? 'bg-[var(--accent)] text-white shadow-xs'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--canvas)]'
-          }`}
-        >
-          <Bookmark className="w-4 h-4" />
-          <span>Saved Discovery Tasks</span>
-          <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded-full ${viewMode === 'saved' ? 'bg-white/20' : 'bg-[var(--canvas)] text-[var(--text-muted)]'}`}>
-            {commitments.filter(c => c.status === 'watched').length}
-          </span>
-        </button>
-      </div>
+      {/* Sub-page back link when navigated via quick access ribbon */}
+      {viewMode !== 'feed' && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => handleSwitchMode('feed')}
+            className="text-[13px] font-medium text-[var(--accent)] hover:underline flex items-center gap-1.5"
+          >
+            &larr; Return to Opportunity Radar Feed
+          </button>
+        </div>
+      )}
 
       {/* Conditional Sub-View Rendering */}
       {viewMode === 'keywords' && (
@@ -191,8 +119,47 @@ export const RadarView: React.FC<RadarViewProps> = ({
 
       {viewMode === 'feed' && (
         <>
-      {/* Deliberate Browse & Filters Surface (PRD 11) */}
-      {browseDrawerOpen && (
+          {/* Layer directly above the scope pills: [Browse Filters] and [Rules] */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <button
+                id="radar-browse-btn"
+                type="button"
+                onClick={() => setBrowseDrawerOpen(!browseDrawerOpen)}
+                className={`pill pill-sm font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  browseDrawerOpen
+                    ? 'on'
+                    : 'text-[var(--text-primary)]'
+                }`}
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Browse Filters</span>
+              </button>
+
+              {(selectedScope !== 'all' || selectedTag !== 'all' || institutionOnly) && (
+                <span className="text-[11px] text-[var(--accent)] font-semibold">
+                  Filtered
+                </span>
+              )}
+            </div>
+
+            <button
+              id="radar-unconventional-btn"
+              type="button"
+              onClick={() => onOpenUnconventionalFeatures?.()}
+              className="pill pill-sm flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+              title="Radar Invariants & Scope Rules"
+              aria-label="Radar Rules"
+            >
+              <div className="w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[9.5px] font-bold font-serif italic leading-none">
+                i
+              </div>
+              <span>Rules</span>
+            </button>
+          </div>
+
+          {/* Deliberate Browse & Filters Surface (PRD 11) */}
+          {browseDrawerOpen && (
         <div
           id="browse-filters-drawer"
           className="p-5 rounded-[20px] bg-[var(--card)] border border-[var(--rule-default)] shadow-[0_1px_2px_rgba(0,0,0,0.05)] mb-6 transition-all"
@@ -281,29 +248,46 @@ export const RadarView: React.FC<RadarViewProps> = ({
         </div>
       )}
 
-      {/* Scope quick tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-6 no-scrollbar">
-        {(['all', 'district', 'division', 'national', 'international'] as const).map((s) => (
-          <button
-            key={s}
-            id={`scope-chip-${s}`}
-            type="button"
-            onClick={() => setSelectedScope(s)}
-            className={`px-3 py-1.5 rounded-[14px] text-[12px] font-medium uppercase tracking-wider transition-all shrink-0 ${
-              selectedScope === s
-                ? 'bg-[var(--accent)] text-white shadow-xs'
-                : 'bg-[var(--card)] border border-[var(--rule-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
+      {/* Scope quick tabs matching previous ribbon type */}
+      <div className="chips" id="scope-chips">
+        {(
+          [
+            { id: 'all', label: 'All Scopes', bg: 'var(--accent)', border: 'var(--accent)' },
+            { id: 'district', label: 'District', bg: '#10B981', border: '#059669' },
+            { id: 'division', label: 'Division', bg: '#0284C7', border: '#0369A1' },
+            { id: 'national', label: 'National', bg: '#4F46E5', border: '#4338CA' },
+            { id: 'international', label: 'International', bg: '#8B5CF6', border: '#7C3AED' },
+          ] as const
+        ).map((s) => {
+          const isSelected = selectedScope === s.id;
+          return (
+            <button
+              key={s.id}
+              id={`scope-chip-${s.id}`}
+              type="button"
+              onClick={() => setSelectedScope(s.id as any)}
+              className={`chip uppercase tracking-wider font-bold ${isSelected ? 'on' : ''}`}
+              style={
+                isSelected
+                  ? {
+                      backgroundColor: s.bg,
+                      borderColor: s.border,
+                      color: '#FFFFFF',
+                      boxShadow: `0 2px 10px ${s.bg}40`,
+                    }
+                  : undefined
+              }
+            >
+              {s.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* 8.2 The Constraint: Tile size must NEVER imply editorial weight in a feed.
           In Radar and Board, all cards are identical! */}
       {sortedItems.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="radar-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {sortedItems.map((item) => (
             <CardItem
               key={item.id}
@@ -317,12 +301,6 @@ export const RadarView: React.FC<RadarViewProps> = ({
       ) : (
         /* 9.10 Empty State: Quiet plasma, static. One line of type. No mascot. */
         <div className="relative overflow-hidden p-12 rounded-[24px] bg-[var(--card)] border border-[var(--rule-default)] text-center my-6">
-          <div
-            className="absolute inset-0 opacity-15 pointer-events-none"
-            style={{
-              background: 'radial-gradient(circle at 50% 50%, #4DB8C8 0%, #1B2A4A 100%)',
-            }}
-          />
           <p className="relative z-10 text-[15px] text-[var(--text-secondary)] font-medium">
             No opportunities match your interests today.
           </p>

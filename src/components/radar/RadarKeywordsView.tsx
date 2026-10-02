@@ -161,7 +161,7 @@ export const RadarKeywordsView: React.FC<RadarKeywordsViewProps> = ({
               <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)] font-mono">
                 Sovereign Discovery Filters
               </span>
-              <span className="text-[10.5px] px-2 py-0.5 rounded-[6px] bg-sky-500/15 text-sky-400 font-bold">
+              <span className="pill pill-sm on">
                 {keywords.length} Tracked
               </span>
             </div>
@@ -221,10 +221,10 @@ export const RadarKeywordsView: React.FC<RadarKeywordsViewProps> = ({
                 type="button"
                 disabled={isTracked}
                 onClick={() => handleAddKeyword(sug)}
-                className={`px-2.5 py-1 rounded-[8px] text-[11px] font-medium transition-all cursor-pointer ${
+                className={`chip chip-sm cursor-pointer ${
                   isTracked
-                    ? 'opacity-40 line-through bg-[var(--canvas)] text-[var(--text-muted)]'
-                    : 'bg-[var(--canvas)] border border-[var(--rule-default)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+                    ? 'opacity-40 line-through cursor-not-allowed'
+                    : ''
                 }`}
               >
                 + {sug}

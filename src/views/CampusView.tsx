@@ -162,7 +162,7 @@ export const CampusView: React.FC<CampusViewProps> = ({
       if (onOpenDispatches) {
         onOpenDispatches();
       } else {
-        showToastMsg('Opening Calm Dispatches');
+        showToastMsg('Opening Messenger');
       }
       return;
     }
@@ -272,7 +272,7 @@ export const CampusView: React.FC<CampusViewProps> = ({
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 overflow-hidden">
       <div className="main" id="campusMain">
-        <div id="campus-view" className="w-full max-w-4xl mx-auto pt-3 pb-16 text-[var(--text)]">
+        <div id="campus-view" className="w-full max-w-7xl mx-auto pt-3 pb-16 text-[var(--text)]">
       {/* Dynamic Feedback Toast */}
       {feedbackNotice && (
         <div className="mb-4 p-3 rounded-[14px] bg-[var(--accent)] text-white text-[13px] font-semibold flex items-center justify-between shadow-lg animate-fadeIn">
@@ -287,129 +287,38 @@ export const CampusView: React.FC<CampusViewProps> = ({
         </div>
       )}
 
-      {/* Screen Title & Role Calibration Header */}
-      <div className="flex flex-col gap-3 mb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+      {/* Screen Title & Invariants Bar */}
+      <div className="flex flex-col gap-1.5 mb-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
             <h1 className="text-[22px] md:text-[26px] font-extrabold tracking-tight text-[var(--text)]">
               Institutional Campus
             </h1>
-            <p className="text-[13px] text-[var(--meta)]">
-              Springfield High Directory · Sovereign internal spaces and club operating consoles.
-            </p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="pill pill-sm on shrink-0">
+                Term 2025–2026 · Week 7
+              </span>
+            </div>
           </div>
 
           <button
             id="campus-unconventional-btn"
             type="button"
             onClick={() => onOpenUnconventionalFeatures?.()}
-            className="p-2 rounded-[14px] bg-[var(--tile)] border border-[rgba(255,255,255,0.08)] text-[var(--meta)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all flex items-center gap-1.5 text-[12px] font-medium shrink-0"
+            className="pill pill-sm flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0 cursor-pointer"
             title="Unconventional Features (PRD & White Paper)"
             aria-label="Unconventional Features"
           >
-            <div className="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10.5px] font-bold font-serif italic leading-none">
+            <div className="w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[9.5px] font-bold font-serif italic leading-none">
               i
             </div>
-            <span className="hidden sm:inline">Invariants</span>
+            <span>Invariants</span>
           </button>
         </div>
-
-        {/* Interactive Role Calibration Strip */}
-        <div className="p-3.5 rounded-[20px] bg-[var(--tile)] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold tracking-wider uppercase text-[var(--meta)]">
-                Calibrated Role:
-              </span>
-              <span
-                className="text-[12px] font-bold px-2.5 py-0.5 rounded-[8px]"
-                style={{
-                  background: currentRoleInfo.bg,
-                  color: currentRoleInfo.color,
-                  border: `1px solid ${currentRoleInfo.color}40`,
-                }}
-              >
-                {currentRoleInfo.title}
-              </span>
-            </div>
-            <span className="text-[11px] text-[var(--meta)]">
-              Tap any role below to switch UI view &amp; permissions immediately
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            {(['dweller', 'aspirant', 'loyal_core', 'steward', 'teacher', 'authority', 'alumni'] as Role[]).map((r) => {
-              const isActive = currentRole === r;
-              const rInfo = roleMeta[r];
-              return (
-                <button
-                  key={r}
-                  type="button"
-                  id={`campus-role-${r}`}
-                  onClick={() => {
-                    onChangeRole?.(r);
-                    showToastMsg(`Role switched to: ${rInfo.title}`);
-                  }}
-                  className={`px-3 py-1.5 rounded-[12px] text-[11.5px] font-semibold transition-all flex items-center gap-1.5 ${
-                    isActive
-                      ? 'shadow-md scale-[1.02]'
-                      : 'bg-[var(--track)] text-[var(--meta)] hover:text-[var(--text)] border border-[rgba(255,255,255,0.04)]'
-                  }`}
-                  style={
-                    isActive
-                      ? {
-                          background: rInfo.color,
-                          color: '#FFFFFF',
-                        }
-                      : {}
-                  }
-                >
-                  <span>{rInfo.title.split(' ')[0]}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Role Context & Capabilities Banner (Changes for EVERY role) */}
-        <div
-          className="p-4 rounded-[18px] border transition-all"
-          style={{
-            background: currentRoleInfo.bg,
-            borderColor: `${currentRoleInfo.color}35`,
-          }}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-[6px]"
-                  style={{ background: currentRoleInfo.color, color: '#fff' }}
-                >
-                  {currentRoleInfo.tier}
-                </span>
-                <span className="text-[14px] font-bold text-[var(--text)]">
-                  {currentRoleInfo.title}
-                </span>
-              </div>
-              <p className="text-[12.5px] text-[var(--text)]/85 mt-1.5 leading-relaxed">
-                {currentRoleInfo.desc}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-3 pt-3 border-t border-[rgba(255,255,255,0.08)] flex flex-wrap gap-2 text-[11.5px]">
-            {currentRoleInfo.capabilities.map((cap, i) => (
-              <span
-                key={i}
-                className="px-2.5 py-1 rounded-[8px] bg-[var(--tile)] text-[var(--text)] border border-[rgba(255,255,255,0.08)] flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" style={{ color: currentRoleInfo.color }} />
-                <span>{cap}</span>
-              </span>
-            ))}
-          </div>
-        </div>
+        <p className="text-[13px] text-[var(--text-secondary)]">
+          Springfield High Directory · Sovereign internal spaces and club operating consoles.
+        </p>
+      </div>
 
         {/* Role-Specific Executive Action Panels */}
 
@@ -538,7 +447,6 @@ export const CampusView: React.FC<CampusViewProps> = ({
             </button>
           </div>
         )}
-      </div>
 
       {/* CAMPUS VIEW MODE: BENTO GRID HUB OR DEDICATED SUB-PAGE */}
       {campusViewMode === 'hub' ? (
@@ -555,20 +463,16 @@ export const CampusView: React.FC<CampusViewProps> = ({
         />
       ) : (
         <div className="flex flex-col gap-5">
-          {/* Top Breadcrumb Back Navigation Bar */}
-          <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)]">
+          {/* Top Back Navigation Bar without path indicator */}
+          <div className="flex items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
             <button
               type="button"
               onClick={() => setCampusViewMode('hub')}
-              className="px-3.5 py-1.5 rounded-[12px] bg-[var(--tile)] border border-[rgba(255,255,255,0.1)] text-[12.5px] font-bold text-[var(--text)] hover:border-[var(--accent)] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+              className="px-3.5 py-1.5 rounded-[12px] bg-[var(--tile)] border border-[rgba(255,255,255,0.1)] text-[12.5px] font-bold text-[var(--text)] hover:-translate-y-0.5 hover:shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Campus Bento Grid</span>
             </button>
-
-            <span className="text-[12px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">
-              Campus Hub / {campusViewMode.replace('-', ' ')}
-            </span>
           </div>
 
           {/* CLUBS SUBPAGE */}
@@ -587,7 +491,7 @@ export const CampusView: React.FC<CampusViewProps> = ({
                   className={`p-4 rounded-[18px] bg-[var(--tile)] border cursor-pointer transition-all flex flex-col justify-between ${
                     isSelected
                       ? 'border-[var(--accent)] ring-1 ring-[var(--accent)] shadow-md'
-                      : 'border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.18)]'
+                      : 'border-[rgba(255,255,255,0.06)] hover:-translate-y-1 hover:shadow-md'
                   }`}
                 >
                   <div>
@@ -672,9 +576,9 @@ export const CampusView: React.FC<CampusViewProps> = ({
                       {selectedClub.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="px-2.5 py-1 rounded-[10px] bg-[var(--track)] border border-[rgba(255,255,255,0.06)] text-[11.5px] text-[var(--meta)] font-medium"
+                          className="pill pill-sm on"
                         >
-                          {tag}
+                          #{tag}
                         </span>
                       ))}
                     </div>
@@ -705,13 +609,13 @@ export const CampusView: React.FC<CampusViewProps> = ({
       {campusViewMode === 'classes' && (
         <div className="flex flex-col gap-5">
           {/* SYNCED ACADEMIC YEAR CALENDAR BANNER */}
-          <div className="p-4 rounded-[20px] bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="calendar-sync-banner p-4 rounded-[20px] bg-[var(--tile)] border border-[var(--rule)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">
                   Academic Calendar Integration
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-emerald-500/20 text-emerald-400 font-bold">
+                <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[var(--tile-active)] border border-[var(--rule)] text-[var(--text-sub)] font-semibold">
                   3-Way Synced
                 </span>
               </div>
@@ -722,7 +626,7 @@ export const CampusView: React.FC<CampusViewProps> = ({
             <button
               type="button"
               onClick={() => setCampusViewMode('academic-calendar')}
-              className="px-3.5 py-1.5 rounded-[12px] bg-emerald-500 text-white text-[12.5px] font-bold hover:bg-emerald-600 transition-all flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+              className="calendar-sync-btn px-3.5 py-1.5 rounded-[12px] bg-[var(--accent)] text-white text-[12.5px] font-bold hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span>View Academic Year Calendar &rarr;</span>
@@ -760,11 +664,7 @@ export const CampusView: React.FC<CampusViewProps> = ({
                   key={day}
                   type="button"
                   onClick={() => setSelectedCalendarDay(day)}
-                  className={`px-3.5 py-1.5 rounded-[12px] text-[12.5px] font-bold transition-all cursor-pointer ${
-                    selectedCalendarDay === day
-                      ? 'bg-[var(--accent)] text-white shadow-xs'
-                      : 'bg-[var(--track)] text-[var(--meta)] hover:text-[var(--text)]'
-                  }`}
+                  className={`chip ${selectedCalendarDay === day ? 'on' : ''}`}
                 >
                   {day}
                 </button>
@@ -779,11 +679,11 @@ export const CampusView: React.FC<CampusViewProps> = ({
             ).map((session) => (
               <div
                 key={session.id}
-                className="p-5 rounded-[20px] bg-[var(--tile)] border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.15)] transition-all shadow-xs"
+                className="timetable-session-card p-4 sm:p-5 rounded-[20px] bg-[var(--tile)] border border-[rgba(255,255,255,0.06)] hover:-translate-y-1 hover:shadow-md transition-all shadow-xs"
               >
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div className="timetable-session-layout flex flex-col md:flex-row md:items-start justify-between gap-4">
                   {/* Class Info */}
-                  <div className="space-y-2 flex-1">
+                  <div className="timetable-session-info space-y-2 flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-[6px] bg-[var(--accent-soft)] text-[var(--accent)]">
                         {session.courseCode}
@@ -804,7 +704,7 @@ export const CampusView: React.FC<CampusViewProps> = ({
                     {/* Venue & Active Topic */}
                     <div className="space-y-1 text-[12.5px]">
                       <div className="flex items-center gap-1.5 text-[var(--text)] font-medium">
-                        <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                        <MapPin className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
                         <span>{session.room} · {session.building}</span>
                       </div>
                       <p className="text-[var(--meta)]">
@@ -829,7 +729,7 @@ export const CampusView: React.FC<CampusViewProps> = ({
                   </div>
 
                   {/* Instructor Card */}
-                  <div className="p-3.5 rounded-[16px] bg-[var(--track)] border border-[rgba(255,255,255,0.06)] shrink-0 w-full md:w-64 flex flex-col justify-between">
+                  <div className="timetable-instructor-card p-3.5 rounded-[16px] bg-[var(--track)] border border-[rgba(255,255,255,0.06)] shrink-0 w-full md:w-64 flex flex-col justify-between">
                     <div>
                       <span className="text-[10.5px] uppercase font-bold text-[var(--meta)] block mb-1.5">
                         Conducted By
@@ -922,8 +822,8 @@ export const CampusView: React.FC<CampusViewProps> = ({
               isDark={isDark}
             />
           ) : (
-            <div className="p-8 rounded-[22px] bg-[var(--tile)] border border-rose-500/30 text-center space-y-3">
-              <div className="w-12 h-12 rounded-[16px] bg-rose-500/15 text-rose-400 mx-auto flex items-center justify-center">
+            <div className="p-8 rounded-[22px] bg-[var(--tile)] border border-[var(--rule)] text-center space-y-3">
+              <div className="w-12 h-12 rounded-[16px] bg-[var(--accent-soft)] text-[var(--accent)] mx-auto flex items-center justify-center">
                 <Lock className="w-6 h-6" />
               </div>
               <h3 className="text-[18px] font-bold text-[var(--text)]">

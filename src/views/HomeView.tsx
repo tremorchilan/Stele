@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SteleItem, Commitment, NoticeItem, Role } from '../types';
 import { WeekStrip } from '../components/WeekStrip';
 import { CardItem } from '../components/CardItem';
-import { Sparkles, ArrowRight, Compass, Zap, MessageSquare, ShieldCheck } from 'lucide-react';
+import { Sparkles, ArrowRight, Compass, Zap, MessageSquare, ShieldCheck, ChevronRight } from 'lucide-react';
 
 interface HomeViewProps {
   items: SteleItem[];
@@ -36,8 +36,6 @@ const WEEK_DAYS = [
   { label: 'Tue', date: '18', count: 2 },
 ];
 
-const CHIP_LIST = ['All', 'Urgent', 'STEM', 'Arts', 'Sports'];
-
 export const HomeView: React.FC<HomeViewProps> = ({
   items,
   commitments,
@@ -60,7 +58,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   score,
 }) => {
   const [selectedDay, setSelectedDay] = useState(0);
-  const [activeChip, setActiveChip] = useState('All');
   const [isChecked, setIsChecked] = useState(true);
   const [ringProgress, setRingProgress] = useState(40);
 
@@ -112,6 +109,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       />
 
       <div className="main" id="homeMain">
+        <div className="w-full max-w-7xl mx-auto pb-8">
         {/* Header Row from Reference */}
         <div className="header-row">
           <div>
@@ -164,24 +162,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <span className="ping" />
             </button>
           </div>
-        </div>
-
-        {/* Filter Chips from Reference */}
-        <div className="chips" id="chips">
-          {CHIP_LIST.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              className={`chip ${activeChip === chip ? 'on' : ''}`}
-              onClick={() => {
-                setActiveChip(chip);
-                onFlashNotch?.();
-                onShowToast?.(`Filter: ${chip}`);
-              }}
-            >
-              {chip}
-            </button>
-          ))}
         </div>
 
         {/* Bento Grid from Reference */}
@@ -334,12 +314,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
             id="tileDeadline"
             onClick={() => {
               handleTileClick();
-              onShowToast?.('Art Portfolio: 2 days remaining');
+              onShowToast?.('Autonomous Robotics Pitch Deck: 2 days remaining');
             }}
           >
             <div className="deadline-amber" id="amberTime">2 days left</div>
-            <div className="notice-ctx" style={{ fontSize: '12px', color: 'var(--meta)', marginTop: '5px' }}>
-              Art Portfolio Review
+            <div className="notice-ctx" style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '5px', lineHeight: 1.3 }}>
+              Autonomous Robotics Pitch Deck
             </div>
             <div className="bar-track">
               <div
@@ -349,73 +329,61 @@ export const HomeView: React.FC<HomeViewProps> = ({
               />
             </div>
           </div>
+        </div>
 
-          {/* Calm Dispatches & Catch-up Digest Bento Tile */}
-          <div
-            className="tile catchup-digest col-span-2 p-4 rounded-[20px] bg-[var(--tile)] border border-[rgba(255,255,255,0.08)] hover:border-[rgba(56,189,248,0.3)] transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs cursor-pointer"
-            id="tileCatchupDigest"
-            onClick={() => {
+        {/* Messenger & Catch-up Digest Full-Width Banner: Sleek, clickable, no overflow */}
+        <div
+          className="w-full mt-3 p-3.5 sm:p-4 rounded-[18px] sm:rounded-[20px] bg-[var(--tile)] border border-[rgba(255,255,255,0.08)] hover:border-[rgba(56,189,248,0.35)] transition-all flex items-center justify-between gap-3 shadow-xs cursor-pointer group active:scale-[0.98]"
+          id="tileCatchupDigest"
+          onClick={() => {
+            handleTileClick();
+            onOpenCatchupDigest?.();
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
               handleTileClick();
               onOpenCatchupDigest?.();
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-[14px] bg-[rgba(56,189,248,0.15)] flex items-center justify-center border border-[rgba(56,189,248,0.3)] text-sky-400 shrink-0">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-[14px] font-extrabold text-[var(--text)]">
-                    Catch-up Digest
-                  </h4>
-                  <span className="px-2 py-0.2 rounded-[6px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" />
-                    <span>Anti-Surveillance</span>
-                  </span>
-                </div>
-                <p className="text-[12px] text-[var(--meta)] mt-0.5">
-                  5 missed dispatches across Section 11-A, Robotics Society &amp; Private DMs · 3 claimable commitments
-                </p>
-              </div>
+            }
+          }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[12px] sm:rounded-[14px] bg-[var(--track)] flex items-center justify-center border border-[var(--rule)] text-[var(--text)] shrink-0">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-
-            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenCatchupDigest?.();
-                }}
-                className="px-3.5 py-1.5 rounded-[12px] bg-[var(--accent)] text-white text-[12px] font-bold hover:opacity-95 active:scale-95 shadow-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Review Digest</span>
-              </button>
-
-              {onOpenDispatches && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenDispatches();
-                  }}
-                  className="px-3 py-1.5 rounded-[12px] bg-[var(--track)] border border-[rgba(255,255,255,0.08)] text-[var(--text)] text-[12px] font-bold hover:border-[var(--accent)] transition-all cursor-pointer"
-                >
-                  Open Dispatches &rarr;
-                </button>
-              )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-[13.5px] sm:text-[14px] font-extrabold text-[var(--text)] transition-colors">
+                  Catch-up Digest
+                </h4>
+                <span className="px-2 py-0.5 rounded-full bg-[var(--track)] text-[var(--text)] text-[10.5px] font-bold border border-[var(--rule)]">
+                  5 New
+                </span>
+                <span className="text-[11px] text-[var(--meta)] font-medium hidden sm:inline">
+                  Private Broadcast
+                </span>
+              </div>
+              <p className="text-[11.5px] sm:text-[12px] text-[var(--text-secondary)] mt-0.5 truncate">
+                5 missed messages across Section 11-A &amp; Robotics · Tap to review
+              </p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[var(--text-sub)] group-hover:text-[var(--text)] shrink-0 group-hover:translate-x-0.5 transition-all text-[12px] font-semibold">
+            <span className="hidden sm:inline">Review</span>
+            <ChevronRight className="w-4 h-4" />
           </div>
         </div>
 
-        {/* Featured Opportunities Section with Dummy Thumbnails */}
+        {/* Featured Opportunities Section */}
         <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.07)]">
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
               <span className="text-[15px] font-bold text-[var(--text)] tracking-tight">
                 Featured Opportunities
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-[var(--tile)] border border-white/10 text-[11px] font-semibold text-[var(--orange)]">
+              <span className="pill pill-sm active-status font-bold">
                 {items.length} Active
               </span>
             </div>
@@ -429,7 +397,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="home-opportunities-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
             {items.slice(0, 4).map((item) => (
               <CardItem
                 key={item.id}
@@ -456,6 +424,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <span>Open Radar View</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
+        </div>
         </div>
       </div>
     </div>

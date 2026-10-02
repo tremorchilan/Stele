@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Calendar as CalendarIcon,
   Download,
@@ -29,6 +29,8 @@ import {
   GraduationCap,
   Target,
   RefreshCw,
+  Smartphone,
+  Maximize2,
 } from 'lucide-react';
 import {
   AcademicCalendarEvent,
@@ -37,6 +39,7 @@ import {
   DispatchMessage,
 } from '../types';
 import { MOCK_ACADEMIC_CALENDAR } from '../data/academicCalendarData';
+import { MobileCalendarWidget } from './calendar/MobileCalendarWidget';
 
 export interface UnifiedCalendarEvent {
   id: string;
@@ -72,6 +75,7 @@ interface UnifiedCalendarModalProps {
   onShowToast: (msg: string) => void;
   isDark: boolean;
   initialDate?: string;
+  isDeviceFrame?: boolean;
 }
 
 const MONTH_NAMES = [
@@ -95,12 +99,31 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
   onShowToast,
   isDark,
   initialDate = '2025-09-19',
+  isDeviceFrame = false,
 }) => {
   // Navigation & View state
   const [currentYear, setCurrentYear] = useState<number>(2025);
   const [currentMonth, setCurrentMonth] = useState<number>(8); // September (0-indexed)
   const [selectedDate, setSelectedDate] = useState<string>(initialDate);
   const [viewMode, setViewMode] = useState<'month' | 'agenda' | 'week'>('month');
+
+  // Mobile vs Desktop widget detection & manual switch
+  const [forceDesktopView, setForceDesktopView] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return isDeviceFrame || window.innerWidth < 768;
+    }
+    return isDeviceFrame;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileScreen(isDeviceFrame || window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isDeviceFrame]);
 
   // Stream toggles (User can filter which streams are active in the calendar)
   const [showAcademic, setShowAcademic] = useState(true);
@@ -409,10 +432,35 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Render sculpted mobile version of the calendar widget when on mobile device / device frame
+  if (!forceDesktopView && (isDeviceFrame || isMobileScreen)) {
+    return (
+      <MobileCalendarWidget
+        isOpen={isOpen}
+        onClose={onClose}
+        activeEvents={activeEvents}
+        selectedDate={selectedDate}
+        onSelectDate={(d) => setSelectedDate(d)}
+        academicEventsCount={academicEvents.length}
+        tasksCount={commitments.length + 2}
+        opportunitiesCount={opportunities.length}
+        onCommitOpportunity={onCommitOpportunity}
+        onCompleteCommitment={onCompleteCommitment}
+        calendarSync={calendarSync}
+        onToggleCalendarSync={onToggleCalendarSync}
+        onDownloadICS={handleDownloadICS}
+        onCopyWebCalFeed={handleCopyWebCalFeed}
+        onShowToast={onShowToast}
+        isDark={isDark}
+        onSwitchToDesktopView={() => setForceDesktopView(true)}
+      />
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 android-popup-backdrop">
       <div
-        className="w-full max-w-5xl h-[92vh] max-h-[850px] rounded-[26px] bg-[var(--card)] border border-[var(--rule-default)] shadow-2xl flex flex-col overflow-hidden text-[var(--text-primary)]"
+        className="w-full max-w-5xl h-[92vh] max-h-[850px] rounded-[26px] bg-[var(--card)] border border-[var(--rule-default)] shadow-2xl flex flex-col overflow-hidden text-[var(--text-primary)] android-popup-widget"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ================= MODAL TOP HEADER ================= */}
@@ -426,8 +474,8 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                 <h2 className="text-[16px] sm:text-[18px] font-extrabold tracking-tight">
                   Dedicated Unified Calendar
                 </h2>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  <ShieldCheck className="w-3 h-3" />
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] text-[10.5px] font-medium bg-[var(--elevated)] text-[var(--text-secondary)] border border-[var(--rule-default)]">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
                   <span>3 Streams Synchronized</span>
                 </span>
               </div>
@@ -439,18 +487,32 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
 
           {/* Header Action Controls */}
           <div className="flex items-center gap-2 ml-auto">
+            {/* Preview Mobile Sculpted Sheet Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setForceDesktopView(false);
+                setIsMobileScreen(true);
+              }}
+              className="px-2.5 py-1.5 rounded-[12px] bg-[var(--card)] border border-[var(--rule-default)] hover:-translate-y-0.5 hover:shadow-xs text-[12px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Switch to Mobile Calendar Widget"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span className="hidden sm:inline">Mobile Widget</span>
+            </button>
+
             {/* Sync External Calendar Quick Button */}
             <button
               type="button"
               onClick={() => setSyncPanelOpen(!syncPanelOpen)}
               className={`px-3 py-1.5 rounded-[12px] text-[12px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
                 calendarSync
-                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
-                  : 'bg-[var(--card)] text-[var(--text-secondary)] border-[var(--rule-default)] hover:text-[var(--text-primary)]'
+                  ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                  : 'bg-[var(--card)] text-[var(--text-secondary)] border-[var(--rule-default)] hover:text-[var(--text-primary)] hover:-translate-y-0.5'
               }`}
               title="Configure external calendar synchronization (Google, Apple, Outlook, iCal)"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${calendarSync ? 'animate-spin-slow text-emerald-400' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${calendarSync ? 'animate-spin-slow' : ''}`} />
               <span className="hidden sm:inline">External Sync:</span>
               <span>{calendarSync ? 'Connected' : 'Sync External'}</span>
             </button>
@@ -459,7 +521,7 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
             <button
               type="button"
               onClick={handleDownloadICS}
-              className="p-2 rounded-[12px] bg-[var(--card)] border border-[var(--rule-default)] hover:border-[var(--accent)] text-[var(--text-primary)] transition-colors cursor-pointer"
+              className="p-2 rounded-[12px] bg-[var(--card)] border border-[var(--rule-default)] hover:-translate-y-0.5 hover:shadow-xs text-[var(--text-primary)] transition-all cursor-pointer"
               title="Download .ics calendar file"
             >
               <Download className="w-4 h-4 text-[var(--accent)]" />
@@ -500,8 +562,8 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                   onClick={handleToggleSyncStatus}
                   className={`px-3.5 py-1.5 rounded-[10px] text-[12px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                     calendarSync
-                      ? 'bg-emerald-500 text-white shadow-sm'
-                      : 'bg-[var(--card)] border border-[var(--rule-default)] text-[var(--text-primary)] hover:border-[var(--accent)]'
+                      ? 'bg-[var(--accent)] text-white shadow-sm'
+                      : 'bg-[var(--card)] border border-[var(--rule-default)] text-[var(--text-primary)] hover:-translate-y-0.5 hover:shadow-xs'
                   }`}
                 >
                   <CalendarCheck className="w-3.5 h-3.5" />
@@ -513,7 +575,7 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                   onClick={handleCopyWebCalFeed}
                   className="px-3 py-1.5 rounded-[10px] bg-[var(--card)] border border-[var(--rule-default)] hover:border-[var(--accent)] text-[12px] font-semibold text-[var(--text-primary)] flex items-center gap-1.5 cursor-pointer"
                 >
-                  {copiedFeedUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Link className="w-3.5 h-3.5" />}
+                  {copiedFeedUrl ? <Check className="w-3.5 h-3.5 text-[var(--accent)]" /> : <Link className="w-3.5 h-3.5" />}
                   <span>{copiedFeedUrl ? 'Copied Feed URL' : 'Copy WebCal Feed'}</span>
                 </button>
 
@@ -542,15 +604,15 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
             <button
               type="button"
               onClick={() => setShowAcademic(!showAcademic)}
-              className={`px-2.5 py-1 rounded-[10px] text-[11.5px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+              className={`px-3 py-1 rounded-full text-[11.5px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
                 showAcademic
-                  ? 'bg-sky-500/20 text-sky-400 border-sky-500/40'
-                  : 'bg-[var(--canvas)] text-[var(--text-muted)] border-[var(--rule-default)] opacity-60'
+                  ? 'bg-[#0284C7] text-white border-[#0369A1] shadow-sm'
+                  : 'bg-[var(--canvas)] text-[var(--text-muted)] border-[var(--rule-default)]/60 opacity-60'
               }`}
             >
-              <GraduationCap className="w-3.5 h-3.5" />
+              <GraduationCap className="w-3.5 h-3.5 fill-current" />
               <span>Academic Almanac</span>
-              <span className="text-[10px] font-mono bg-sky-500/30 px-1.5 py-0.2 rounded-full">
+              <span className={`pill pill-sm ${showAcademic ? 'bg-white/20 text-white' : ''}`}>
                 {academicEvents.length}
               </span>
             </button>
@@ -559,15 +621,15 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
             <button
               type="button"
               onClick={() => setShowTasks(!showTasks)}
-              className={`px-2.5 py-1 rounded-[10px] text-[11.5px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+              className={`px-3 py-1 rounded-full text-[11.5px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
                 showTasks
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                  : 'bg-[var(--canvas)] text-[var(--text-muted)] border-[var(--rule-default)] opacity-60'
+                  ? 'bg-[#10B981] text-white border-[#059669] shadow-sm'
+                  : 'bg-[var(--canvas)] text-[var(--text-muted)] border-[var(--rule-default)]/60 opacity-60'
               }`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5" />
+              <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.4]" />
               <span>Task &amp; Commitments</span>
-              <span className="text-[10px] font-mono bg-emerald-500/30 px-1.5 py-0.2 rounded-full">
+              <span className={`pill pill-sm ${showTasks ? 'bg-white/20 text-white' : ''}`}>
                 {commitments.length + 2}
               </span>
             </button>
@@ -576,41 +638,33 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
             <button
               type="button"
               onClick={() => setShowOpportunities(!showOpportunities)}
-              className={`px-2.5 py-1 rounded-[10px] text-[11.5px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+              className={`px-3 py-1 rounded-full text-[11.5px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
                 showOpportunities
-                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                  : 'bg-[var(--canvas)] text-[var(--text-muted)] border-[var(--rule-default)] opacity-60'
+                  ? 'bg-[#F59E0B] text-[#0F172A] border-[#D97706] shadow-sm'
+                  : 'bg-[var(--canvas)] text-[var(--text-muted)] border-[var(--rule-default)]/60 opacity-60'
               }`}
             >
-              <Target className="w-3.5 h-3.5" />
+              <Target className="w-3.5 h-3.5 stroke-[2.4]" />
               <span>Opportunity Deadlines</span>
-              <span className="text-[10px] font-mono bg-amber-500/30 px-1.5 py-0.2 rounded-full">
+              <span className={`pill pill-sm ${showOpportunities ? 'bg-black/20 text-[#0F172A]' : ''}`}>
                 {opportunities.length}
               </span>
             </button>
           </div>
 
           {/* View Mode Switcher (Month Grid vs Agenda Timeline) */}
-          <div className="flex items-center gap-1 p-1 rounded-[10px] bg-[var(--canvas)] border border-[var(--rule-default)] ml-auto">
+          <div className="flex items-center gap-1.5 p-1 rounded-full bg-[var(--canvas)] border border-[var(--rule-default)] ml-auto">
             <button
               type="button"
               onClick={() => setViewMode('month')}
-              className={`px-3 py-1 rounded-[7px] text-[11.5px] font-bold transition-all cursor-pointer ${
-                viewMode === 'month'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              }`}
+              className={`chip ${viewMode === 'month' ? 'on' : ''}`}
             >
               Month Grid
             </button>
             <button
               type="button"
               onClick={() => setViewMode('agenda')}
-              className={`px-3 py-1 rounded-[7px] text-[11.5px] font-bold transition-all cursor-pointer ${
-                viewMode === 'agenda'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              }`}
+              className={`chip ${viewMode === 'agenda' ? 'on' : ''}`}
             >
               Agenda Timeline
             </button>
@@ -744,19 +798,19 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                           <div className="flex items-center gap-1">
                             {hasAcademic && (
                               <span
-                                className="w-2 h-2 rounded-full bg-sky-400 shrink-0"
+                                className="w-2 h-2 rounded-full bg-[var(--accent)] shrink-0"
                                 title="Academic Milestone"
                               />
                             )}
                             {hasTasks && (
                               <span
-                                className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"
+                                className="w-2 h-2 rounded-full bg-[var(--text-secondary)] shrink-0"
                                 title="Task / Commitment Deadline"
                               />
                             )}
                             {hasOpportunities && (
                               <span
-                                className="w-2 h-2 rounded-full bg-amber-400 shrink-0"
+                                className="w-2 h-2 rounded-full bg-[var(--orange)] shrink-0"
                                 title="Opportunity Deadline"
                               />
                             )}
@@ -766,13 +820,7 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                           {cell.events.slice(0, 2).map((ev) => (
                             <div
                               key={ev.id}
-                              className={`hidden sm:block text-[9.5px] font-semibold truncate px-1 py-0.2 rounded-[4px] leading-tight ${
-                                ev.sourceType === 'academic'
-                                  ? 'bg-sky-500/20 text-sky-400'
-                                  : ev.sourceType === 'task'
-                                  ? 'bg-emerald-500/20 text-emerald-400'
-                                  : 'bg-amber-500/20 text-amber-400'
-                              }`}
+                              className="hidden sm:block text-[9.5px] font-semibold truncate px-1 py-0.2 rounded-[4px] leading-tight bg-[var(--elevated)] border border-[var(--rule-default)]/50 text-[var(--text-secondary)]"
                             >
                               {ev.title}
                             </div>
@@ -807,7 +855,7 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                     />
                   </div>
 
-                  <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto">
+                  <div className="chips w-full sm:w-auto">
                     {[
                       { id: 'all', label: 'All' },
                       { id: 'urgent', label: 'Urgent' },
@@ -819,10 +867,8 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                         key={btn.id}
                         type="button"
                         onClick={() => setAgendaFilter(btn.id as any)}
-                        className={`px-2.5 py-1 text-[11px] font-bold rounded-[8px] cursor-pointer whitespace-nowrap transition-colors ${
-                          agendaFilter === btn.id
-                            ? 'bg-[var(--accent)] text-white'
-                            : 'bg-[var(--card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--rule-default)]'
+                        className={`chip chip-sm cursor-pointer whitespace-nowrap ${
+                          agendaFilter === btn.id ? 'on' : ''
                         }`}
                       >
                         {btn.label}
@@ -862,35 +908,19 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                         }`}
                       >
                         <div className="flex items-start gap-3">
-                          <div
-                            className={`w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0 ${
-                              evt.sourceType === 'academic'
-                                ? 'bg-sky-500/20 text-sky-400'
-                                : evt.sourceType === 'task'
-                                ? 'bg-emerald-500/20 text-emerald-400'
-                                : 'bg-amber-500/20 text-amber-400'
-                            }`}
-                          >
+                          <div className="w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0 bg-[var(--track)] border border-[var(--rule-default)] text-[var(--text-primary)]">
                             {evt.sourceType === 'academic' ? (
-                              <GraduationCap className="w-5 h-5" />
+                              <GraduationCap className="w-5 h-5 text-[var(--accent)]" />
                             ) : evt.sourceType === 'task' ? (
-                              <CheckCircle2 className="w-5 h-5" />
+                              <CheckCircle2 className="w-5 h-5 text-[var(--text-primary)]" />
                             ) : (
-                              <Target className="w-5 h-5" />
+                              <Target className="w-5 h-5 text-[var(--orange)]" />
                             )}
                           </div>
 
                           <div>
                             <div className="flex items-center gap-2">
-                              <span
-                                className={`text-[10px] font-mono font-bold uppercase px-1.5 py-0.2 rounded-[4px] ${
-                                  evt.sourceType === 'academic'
-                                    ? 'bg-sky-500/20 text-sky-400'
-                                    : evt.sourceType === 'task'
-                                    ? 'bg-emerald-500/20 text-emerald-400'
-                                    : 'bg-amber-500/20 text-amber-400'
-                                }`}
-                              >
+                              <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.2 rounded-[4px] bg-[var(--track)] border border-[var(--rule-default)]/60 text-[var(--text-secondary)]">
                                 {evt.category}
                               </span>
                               <span className="text-[11px] font-mono text-[var(--text-secondary)]">
@@ -972,15 +1002,7 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                     className="p-3.5 rounded-[16px] bg-[var(--canvas)] border border-[var(--rule-default)] shadow-xs space-y-2"
                   >
                     <div className="flex items-center justify-between">
-                      <span
-                        className={`text-[10px] font-mono font-bold uppercase px-1.5 py-0.2 rounded-[4px] ${
-                          evt.sourceType === 'academic'
-                            ? 'bg-sky-500/20 text-sky-400'
-                            : evt.sourceType === 'task'
-                            ? 'bg-emerald-500/20 text-emerald-400'
-                            : 'bg-amber-500/20 text-amber-400'
-                        }`}
-                      >
+                      <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.2 rounded-[4px] bg-[var(--track)] border border-[var(--rule-default)]/60 text-[var(--text-secondary)]">
                         {evt.category}
                       </span>
                       {evt.time && (
@@ -1040,7 +1062,7 @@ export const UnifiedCalendarModal: React.FC<UnifiedCalendarModalProps> = ({
                               onCompleteCommitment?.(evt.originalCommitment!);
                               onShowToast(`Task "${evt.originalCommitment!.title}" marked complete!`);
                             }}
-                            className="px-2.5 py-1 rounded-[8px] bg-emerald-500 text-white text-[11px] font-bold hover:opacity-90 cursor-pointer"
+                            className="px-2.5 py-1 rounded-[8px] bg-[var(--accent)] text-white text-[11px] font-bold hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                           >
                             Mark Complete
                           </button>

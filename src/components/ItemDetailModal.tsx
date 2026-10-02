@@ -3,6 +3,7 @@ import { X, Star, CheckCircle, Calendar, Send, ShieldCheck, Eye, AlertTriangle }
 import { SteleItem, Role } from '../types';
 import { CountdownRing } from './CountdownRing';
 import { calculateTimeStatus } from '../utils/time';
+import { getSolidTagStyle, getSolidScopeStyle } from '../utils/colorPills';
 
 interface ItemDetailModalProps {
   item: SteleItem | null;
@@ -38,13 +39,13 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   return (
     <div
       id="item-detail-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md android-popup-backdrop"
       onClick={onClose}
     >
       <div
         id="item-detail-modal"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 md:p-8 rounded-[26px] stele-glassmorphic-overlay transition-all text-[var(--text)]"
+        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 md:p-8 rounded-[26px] stele-glassmorphic-overlay text-[var(--text)] android-popup-widget"
         style={{
           background: 'rgba(26, 26, 32, 0.82)',
           backdropFilter: 'blur(28px) saturate(190%)',
@@ -56,13 +57,37 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
         {/* Header with Close */}
         <div className="flex items-start justify-between gap-4 pb-4 border-b border-[var(--rule-default)]/40">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-2 py-0.5 rounded-[6px] text-[11px] font-semibold tracking-wider uppercase bg-[var(--accent-soft)] text-[var(--accent)]">
-                {item.provenance} Source
-              </span>
-              <span className="text-[12px] text-[var(--text-muted)] font-medium uppercase tracking-wider">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span
+                className="pill pill-sm font-semibold uppercase"
+                style={{
+                  backgroundColor: getSolidScopeStyle(item.scope).bg,
+                  color: getSolidScopeStyle(item.scope).text,
+                  borderColor: getSolidScopeStyle(item.scope).border,
+                }}
+              >
                 {item.scope} Scope
               </span>
+              <span
+                className="pill pill-sm font-bold"
+                style={{
+                  backgroundColor: '#0284C7',
+                  color: '#FFFFFF',
+                  borderColor: '#0369A1',
+                }}
+              >
+                {item.provenance} Source
+              </span>
+              {(status.isCritical || status.isRed) && (
+                <span className="pill pill-sm urgent font-bold shadow-md">
+                  Closing Soon
+                </span>
+              )}
+              {item.isInstitutionOnly && (
+                <span className="pill pill-sm urgent font-bold">
+                  Internal Only
+                </span>
+              )}
             </div>
             <h2 className="text-[22px] md:text-[24px] font-bold leading-[1.2] text-[var(--text-primary)]">
               {item.title}
@@ -81,8 +106,14 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
           </button>
         </div>
 
-        {/* Opportunity Dummy Thumbnail Banner */}
-        <div className="my-4 relative w-full h-44 sm:h-52 rounded-[18px] overflow-hidden border border-white/10 shadow-md">
+        {/* Opportunity Dummy Thumbnail Banner with blended bottom */}
+        <div
+          className="my-4 relative w-full h-48 sm:h-56 rounded-t-[18px] rounded-b-[4px] overflow-hidden shadow-md bg-[var(--card)]"
+          style={{
+            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, rgba(0, 0, 0, 0.7) 80%, transparent 100%)',
+            maskImage: 'linear-gradient(to bottom, black 50%, rgba(0, 0, 0, 0.7) 80%, transparent 100%)',
+          }}
+        >
           <img
             src={
               item.thumbnailUrl ||
@@ -92,16 +123,26 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-          <div className="absolute bottom-3 left-4 flex flex-wrap gap-1.5">
-            {item.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-2.5 py-1 rounded-[8px] bg-black/60 backdrop-blur-md text-[11.5px] font-bold text-white border border-white/15"
-              >
-                #{tag}
-              </span>
-            ))}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[var(--card)] pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--card)] via-[var(--card)]/80 to-transparent pointer-events-none" />
+          <div className="absolute bottom-3 left-4 flex flex-wrap gap-1.5 z-10">
+            {item.tags.map((tag) => {
+              const tagStyle = getSolidTagStyle(tag);
+              return (
+                <span
+                  key={tag}
+                  className="pill pill-sm font-bold shadow-md"
+                  style={{
+                    backgroundColor: tagStyle.bg,
+                    color: tagStyle.text,
+                    borderColor: tagStyle.border,
+                    boxShadow: tagStyle.shadow,
+                  }}
+                >
+                  #{tag}
+                </span>
+              );
+            })}
           </div>
         </div>
 

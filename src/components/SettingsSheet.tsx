@@ -103,7 +103,7 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({
   ];
 
   const palettes: { id: NaturalPalette; label: string; colors: string[] }[] = [
-    { id: 'sunset', label: 'Sunset', colors: ['#1B2A4A', '#6B4E9E', '#D9A441', '#F4F1EA'] },
+    { id: 'sunset', label: 'Stele Dark', colors: ['#121214', '#19191D', '#38BDF8', '#F2F2F0'] },
     { id: 'afternoon', label: 'Afternoon', colors: ['#B8AFA0', '#4DB8C8', '#E8A045', '#EAF3F5'] },
     { id: 'seaside', label: 'Seaside', colors: ['#2A6B7C', '#7EC8D8', '#E8D5A3', '#F5F0E6'] },
   ];
@@ -210,7 +210,7 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({
                     className={`p-3 rounded-[14px] border text-left transition-all flex items-start justify-between gap-3 ${
                       isSelected
                         ? 'border-[var(--stele-accent)] ring-1 ring-[var(--stele-accent)] bg-[var(--stele-accent-soft)]'
-                        : 'border-[var(--stele-rule)] hover:border-[var(--stele-text-muted)] bg-[var(--stele-surface)]'
+                        : 'border-[var(--stele-rule)] hover:-translate-y-0.5 hover:shadow-xs bg-[var(--stele-surface)]'
                     }`}
                   >
                     <div className="flex-1">
@@ -332,7 +332,7 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({
                   className={`p-2.5 rounded-[14px] border text-left flex flex-col gap-1.5 transition-all ${
                     currentPalette === p.id
                       ? 'border-[var(--stele-accent)] ring-1 ring-[var(--stele-accent)] bg-[var(--stele-accent-soft)]'
-                      : 'border-[var(--stele-rule)] hover:border-[var(--stele-text-muted)] bg-[var(--stele-surface)]'
+                      : 'border-[var(--stele-rule)] hover:-translate-y-0.5 hover:shadow-xs bg-[var(--stele-surface)]'
                   }`}
                 >
                   <span className="text-[12px] font-semibold text-[var(--stele-text-primary)]">
@@ -429,7 +429,7 @@ export const SettingsSheet: React.FC<SettingsSheetProps> = ({
                 onClose();
                 onOpenLedgerExport();
               }}
-              className="px-3.5 py-2 rounded-[12px] bg-[var(--stele-surface)] border border-[var(--stele-rule)] text-[var(--stele-text-primary)] text-[13px] font-medium flex items-center gap-1.5 hover:border-[var(--stele-text-primary)] transition-colors"
+              className="px-3.5 py-2 rounded-[12px] bg-[var(--stele-surface)] border border-[var(--stele-rule)] text-[var(--stele-text-primary)] text-[13px] font-medium flex items-center gap-1.5 hover:-translate-y-0.5 hover:shadow-xs transition-all cursor-pointer"
             >
               <HardDriveDownload className="w-4 h-4 text-[var(--stele-accent)]" />
               <span>Inspect</span>

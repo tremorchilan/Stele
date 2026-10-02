@@ -155,6 +155,7 @@ export interface DispatchMessage {
   senderName: string;
   senderRole: Role;
   senderAvatar?: string;
+  senderPhone?: string;
   timestamp: string;
   content: string;
   isOfficial?: boolean;
@@ -167,6 +168,11 @@ export interface DispatchMessage {
   isEncrypted?: boolean;
   surveillanceShielded?: boolean;
   isAiResponse?: boolean;
+  mediaUrl?: string;
+  mediaCaption?: string;
+  reactions?: { emoji: string; count: number }[];
+  replyTo?: { senderName: string; text: string };
+  status?: 'sent' | 'delivered' | 'read';
 }
 
 export type ChannelCategory =
@@ -203,6 +209,13 @@ export interface CommunicationChannel {
   antiSurveillanceGuarantee: string;
   ephemeralDays?: number;
   topic?: string;
+  avatarUrl?: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
+  lastMessageStatus?: 'sent' | 'delivered' | 'read';
+  hasMedia?: boolean;
+  participantsSnippet?: string;
+  isOnline?: boolean;
 }
 
 export interface InstitutionalKnowledgeQuery {

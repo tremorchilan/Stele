@@ -50,6 +50,7 @@ import { CampusPerksModal } from './components/CampusPerksModal';
 import { CatchupDigestModal } from './components/CatchupDigestModal';
 import { FriendIndexModal } from './components/FriendIndexModal';
 import { UnifiedCalendarModal } from './components/UnifiedCalendarModal';
+import { DesktopSidebar } from './components/DesktopSidebar';
 import { MOCK_ACADEMIC_CALENDAR } from './data/academicCalendarData';
 import { Wifi, FileText, Sliders, BookOpen, Smartphone, Maximize2, User, Flame, Coffee, MessageSquare, QrCode } from 'lucide-react';
 
@@ -88,8 +89,14 @@ export default function App() {
     localStorage.setItem('stele_profile', JSON.stringify(studentProfile));
   }, [studentProfile]);
 
-  // Layout View Mode (Device Frame vs Fluid Canvas) - Default to reference device frame
-  const [isDeviceFrame, setIsDeviceFrame] = useState(true);
+  // Layout View Mode (Device Frame vs Fluid Canvas)
+  // Automatically start in Desktop Expanded View on desktop screens (>=1024px) so navigation is immediately visible
+  const [isDeviceFrame, setIsDeviceFrame] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 1024;
+    }
+    return false;
+  });
 
   // Dynamic Island Notch flash state & Inset Glass Sheet state from reference
   const [notchPulsing, setNotchPulsing] = useState(false);
@@ -159,7 +166,7 @@ export default function App() {
 
   // Sub-page state for exact Ribbon quick-access wiring
   const [radarSubMode, setRadarSubMode] = useState<'feed' | 'keywords' | 'saved'>('feed');
-  const [boardSection, setBoardSection] = useState<'active' | 'watched' | 'past' | 'analytics'>('active');
+  const [boardSection, setBoardSection] = useState<'all' | 'active' | 'watched' | 'past' | 'analytics'>('all');
   const [campusSubMode, setCampusSubMode] = useState<
     'hub' | 'clubs' | 'classes' | 'academic-calendar' | 'resources' | 'quiet-zones' | 'steward-console'
   >('hub');
@@ -279,7 +286,7 @@ export default function App() {
     }
 
     // --- CAMPUS QUICK ACCESS ITEMS ---
-    if (lower.includes('calm dispatch')) {
+    if (lower.includes('calm dispatch') || lower.includes('messenger')) {
       setActiveTab('dispatches');
       setRibbonOpen(false);
       return;
@@ -801,6 +808,266 @@ export default function App() {
     setWikiPages((prev) => [handoverWiki, ...prev]);
   };
 
+  const renderActiveView = () => (
+    <>
+      {activeTab === 'home' && (
+        <HomeView
+          items={items}
+          commitments={commitments}
+          notices={notices}
+          currentRole={currentRole}
+          onSelectItem={(item) => setSelectedItem(item)}
+          onOpenCommitment={(comm) => {
+            const matched = items.find((i) => i.id === comm.itemId);
+            if (matched) setSelectedItem(matched);
+          }}
+          onNavigateTab={(tab) => {
+            setActiveTab(tab);
+            setRibbonOpen(false);
+          }}
+          onFlashNotch={handleFlashNotch}
+          onShowToast={showToast}
+          onOpenDetailSheet={() => setDetailSheetOpen(true)}
+          onOpenUnconventionalFeatures={() => setUnconventionalWidgetOpen(true)}
+          onOpenProfile={() => setProfileModalOpen(true)}
+          onInspectNotice={handleInspectNotice}
+          onFulfillSlip={handleFulfillSlip}
+          onOpenCatchupDigest={() => setCatchupDigestModalOpen(true)}
+          onOpenDispatches={() => {
+            setActiveTab('dispatches');
+            setRibbonOpen(false);
+          }}
+          onOpenUnifiedCalendar={() => setUnifiedCalendarOpen(true)}
+          streakCount={studentProfile.dailyStreak}
+          score={studentProfile.score}
+        />
+      )}
+
+      {activeTab === 'radar' && (
+        <RadarView
+          items={items}
+          commitments={commitments}
+          onSelectItem={(item) => setSelectedItem(item)}
+          onOpenUnconventionalFeatures={() => setUnconventionalWidgetOpen(true)}
+          isDark={isDark}
+          initialMode={radarSubMode}
+          onModeChange={setRadarSubMode}
+        />
+      )}
+
+      {activeTab === 'board' && (
+        <BoardView
+          commitments={commitments}
+          onSelectCommitment={(comm) => {
+            const matched = items.find((i) => i.id === comm.itemId);
+            if (matched) setSelectedItem(matched);
+          }}
+          onCompleteCommitment={handleCompleteCommitment}
+          onUnwatchCommitment={handleUnwatchCommitment}
+          onOpenUnconventionalFeatures={() => setUnconventionalWidgetOpen(true)}
+          initialSection={boardSection}
+          onSectionChange={setBoardSection}
+          profile={studentProfile}
+          onOpenProfile={() => setProfileModalOpen(true)}
+        />
+      )}
+
+      {activeTab === 'campus' && (
+        <CampusView
+          clubs={clubs}
+          wikiPages={wikiPages}
+          pipeline={pipeline}
+          currentRole={currentRole}
+          onChangeRole={(newRole) => {
+            setCurrentRole(newRole);
+            showToast(`Calibrated to ${newRole.replace('_', ' ').toUpperCase()}`);
+          }}
+          onAddTask={handleAddTask}
+          onAddWikiPage={handleAddWikiPage}
+          onNominateSuccessor={handleNominateSuccessor}
+          onOpenUnconventionalFeatures={() => setUnconventionalWidgetOpen(true)}
+          channels={channels}
+          messages={dispatchMessages}
+          onSendMessage={handleSendDispatch}
+          onConvertToActionableTask={handleConvertDispatchToActionableTask}
+          onOpenPerksBazaar={() => {
+            setBazaarSubTab('bazaar');
+            setActiveTab('bazaar');
+            setRibbonOpen(false);
+          }}
+          onOpenDispatches={() => {
+            setActiveTab('dispatches');
+            setRibbonOpen(false);
+          }}
+          onOpenUnifiedCalendar={() => setUnifiedCalendarOpen(true)}
+          studentName={studentProfile.name}
+          isDark={isDark}
+          initialViewMode={campusSubMode}
+          onViewModeChange={setCampusSubMode}
+        />
+      )}
+
+      {/* Dedicated Messenger Communication Page */}
+      {activeTab === 'dispatches' && (
+        <DispatchesView
+          channels={channels}
+          messages={dispatchMessages}
+          currentRole={currentRole}
+          studentName={studentProfile.name}
+          onSendMessage={handleSendDispatch}
+          onConvertToActionableTask={handleConvertDispatchToActionableTask}
+          onNavigateBack={() => setActiveTab('campus')}
+          onOpenCatchupDigest={() => setCatchupDigestModalOpen(true)}
+          friends={friendsList}
+          onAddFriend={(peer) => {
+            setFriendsList((prev) => [peer, ...prev]);
+            showToast(`Peer added: ${peer.name} (${peer.trustLevel})`);
+          }}
+          isDark={isDark}
+        />
+      )}
+
+      {/* Dedicated Physical Perks Bazaar Page */}
+      {activeTab === 'bazaar' && (
+        <PerksBazaarView
+          perks={perks}
+          profile={studentProfile}
+          onRedeemPerk={handleRedeemPerk}
+          onMarkPerkUsed={handleMarkPerkUsed}
+          onNavigateBack={() => setActiveTab('campus')}
+          isDark={isDark}
+          initialTab={bazaarSubTab}
+        />
+      )}
+    </>
+  );
+
+  const renderSheets = () => (
+    <>
+      {/* Inset Glass Settings Sheet from reference */}
+      <div className={`glass-sheet ${glassSheetOpen ? 'visible' : ''}`} id="glassSheet">
+        <div className="glass-sheet-header">
+          <div className="glass-sheet-title">Campus Preferences</div>
+          <button
+            className="glass-sheet-close"
+            id="closeGlassBtn"
+            type="button"
+            onClick={() => setGlassSheetOpen(false)}
+          >
+            &times;
+          </button>
+        </div>
+        <div
+          className="glass-row"
+          onClick={() => {
+            const next = !instantNotif;
+            setInstantNotif(next);
+            showToast(`Instant alerts: ${next ? 'Active' : 'Muted'}`);
+          }}
+        >
+          <span>Instant Notifications</span>
+          <div className={`ios-switch ${instantNotif ? 'on' : ''}`} id="toggleNotif">
+            <div className="thumb" />
+          </div>
+        </div>
+        <div
+          className="glass-row"
+          onClick={() => {
+            const next = !calendarSync;
+            setCalendarSync(next);
+            showToast(`Calendar Sync: ${next ? 'Linked' : 'Detached'}`);
+          }}
+        >
+          <span>Calendar Sync (iCal)</span>
+          <div className={`ios-switch ${calendarSync ? 'on' : ''}`} id="toggleSync">
+            <div className="thumb" />
+          </div>
+        </div>
+        <div
+          className="glass-row"
+          onClick={() => {
+            setGlassSheetOpen(false);
+            setSettingsOpen(true);
+          }}
+        >
+          <span className="text-[var(--accent)] font-semibold">Full System Calibration</span>
+          <span className="text-[14px] text-[var(--meta)]">&rsaquo;</span>
+        </div>
+      </div>
+
+      {/* Slide-Up Bottom Detail Sheet matching reference */}
+      <div className={`detail-sheet ${detailSheetOpen ? 'show' : ''}`} id="detailSheet">
+        <div className="relative w-full">
+          <div
+            className="grab"
+            onClick={() => setDetailSheetOpen(false)}
+            role="button"
+            tabIndex={0}
+            aria-label="Close detail sheet"
+          />
+          <button
+            type="button"
+            onClick={() => setDetailSheetOpen(false)}
+            className="absolute top-0 right-0 p-1 text-[var(--meta)] hover:text-white rounded-full transition-colors text-lg leading-none"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <h3>Robotics Olympiad — Regional</h3>
+        <p>
+          Springfield High · Gym A · Team of 4 · Bring laptop + hardware kit. Mr. Rahman will finalize the team roster tonight at 8:00 PM.
+        </p>
+        <div className="detail-meta">
+          <div>
+            <b>6h</b>
+            <span>Left</span>
+          </div>
+          <div>
+            <b>12</b>
+            <span>Spots</span>
+          </div>
+          <div>
+            <b>$10</b>
+            <span>Fee</span>
+          </div>
+        </div>
+        <button
+          className="cta"
+          id="applyBtn"
+          type="button"
+          onClick={() => {
+            showToast('Application drafted · Check Board');
+            setDetailSheetOpen(false);
+            if (items[0]) handleCommitItem(items[0]);
+          }}
+        >
+          Apply now &rarr;
+        </button>
+      </div>
+    </>
+  );
+
+  const renderNavBar = () => (
+    <NavBar
+      activeTab={activeTab}
+      ribbonTab={ribbonTab}
+      ribbonOpen={ribbonOpen}
+      onNavClick={handleNavClick}
+      onSelectRibbonItem={handleSelectRibbonItem}
+      onOpenSettings={() => {
+        setGlassSheetOpen(true);
+        setRibbonOpen(false);
+      }}
+      onOpenProfile={() => {
+        setProfileModalOpen(true);
+        setRibbonOpen(false);
+      }}
+      profileScore={studentProfile.score}
+      isDark={isDark}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-[var(--stele-canvas)] text-[var(--stele-text-primary)] relative transition-colors duration-200">
       {/* Top Institutional Bar */}
@@ -823,7 +1090,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsDeviceFrame(!isDeviceFrame)}
-              className="px-2.5 py-1 rounded-[10px] bg-[var(--stele-canvas)] border border-[var(--stele-rule)] text-[11px] font-medium text-[var(--stele-text-secondary)] hover:text-[var(--stele-text-primary)] hidden md:flex items-center gap-1.5 transition-colors"
+              className="px-2.5 py-1 rounded-[10px] bg-[var(--stele-canvas)] border border-[var(--stele-rule)] text-[11px] font-medium text-[var(--stele-text-secondary)] hover:text-[var(--stele-text-primary)] flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Toggle between Reference Device Frame (390x844) and Responsive Canvas"
             >
               {isDeviceFrame ? <Maximize2 className="w-3 h-3" /> : <Smartphone className="w-3 h-3" />}
@@ -909,326 +1176,150 @@ export default function App() {
       </header>
 
       {/* Main Container: Device Shell Mode or Fluid Mode */}
-      <div className="w-full py-4 sm:py-7 flex justify-center relative">
+      <div
+        className={`w-full ${
+          isDeviceFrame
+            ? 'py-4 sm:py-7 flex justify-center'
+            : 'p-2 sm:p-4 lg:p-6 flex justify-center'
+        } relative`}
+      >
         {/* Outer ambient backdrop glow from reference */}
         <div className="outer-ambient-glow" />
 
-        <div
-          className={isDeviceFrame ? 'device' : 'device-expanded'}
-          id="deviceContainer"
-        >
-          {/* Ambient orbs & grain background matching reference */}
-          <div className="device-bg">
-            <div className="orb1" />
-            <div className="orb2" />
-            <div className="grain" />
-          </div>
-
-          {/* Quick Toast Notification */}
-          <div className={`toast ${toastMessage ? 'show' : ''}`} id="toast">
-            {toastMessage}
-          </div>
-
-          {/* Dynamic Island / Top Notch */}
-          <div
-            className={`dynamic-notch ${notchPulsing ? 'pulse-active' : ''}`}
-            id="dynamicNotch"
-          >
-            <div className="lens" />
-            <div className="indicator" id="notchIndicator" />
-          </div>
-
-          {/* Status Bar */}
-          <div className="status-bar">
-            <span className="status-time" id="clock">{currentTime}</span>
-            <div className="status-icons">
-              <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor">
-                <rect x="0" y="3" width="3" height="9" rx="0.5" />
-                <rect x="4.5" y="2" width="3" height="10" rx="0.5" />
-                <rect x="9" y="0.5" width="3" height="11.5" rx="0.5" />
-                <rect x="13.5" y="0" width="3" height="12" rx="0.5" opacity="0.35" />
-              </svg>
-              <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-                <path d="M1 4.5C2.8 2.7 5.2 1.6 8 1.6S13.2 2.7 15 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                <path d="M3.2 6.8A6.2 6.2 0 018 5.2c1.9 0 3.6.7 4.8 1.6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                <path d="M5.5 9a3.5 3.5 0 015 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                <circle cx="8" cy="11" r="1" fill="currentColor" />
-              </svg>
-              <svg width="27" height="13" viewBox="0 0 27 13">
-                <rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="currentColor" strokeOpacity="0.35" fill="none" />
-                <rect x="2" y="2" width="17" height="9" rx="2" fill="currentColor" />
-                <rect x="23.5" y="4" width="3" height="5" rx="1" fill="currentColor" fillOpacity="0.4" />
-              </svg>
+        {isDeviceFrame ? (
+          <div className="device" id="deviceContainer">
+            {/* Ambient orbs & grain background matching reference */}
+            <div className="device-bg">
+              <div className="orb1" />
+              <div className="orb2" />
+              <div className="grain" />
             </div>
-          </div>
 
-          {/* Active View */}
-          <main className="w-full flex-1 min-h-0 overflow-hidden flex flex-col relative">
-            {activeTab === 'home' && (
-              <HomeView
-                items={items}
-                commitments={commitments}
-                notices={notices}
-                currentRole={currentRole}
-                onSelectItem={(item) => setSelectedItem(item)}
-                onOpenCommitment={(comm) => {
-                  const matched = items.find((i) => i.id === comm.itemId);
-                  if (matched) setSelectedItem(matched);
-                }}
-                onNavigateTab={(tab) => {
-                  setActiveTab(tab);
-                  setRibbonOpen(false);
-                }}
-                onFlashNotch={handleFlashNotch}
-                onShowToast={showToast}
-                onOpenDetailSheet={() => setDetailSheetOpen(true)}
-                onOpenUnconventionalFeatures={() => setUnconventionalWidgetOpen(true)}
-                onOpenProfile={() => setProfileModalOpen(true)}
-                onInspectNotice={handleInspectNotice}
-                onFulfillSlip={handleFulfillSlip}
-                onOpenCatchupDigest={() => setCatchupDigestModalOpen(true)}
-                onOpenDispatches={() => {
-                  setActiveTab('dispatches');
-                  setRibbonOpen(false);
-                }}
-                onOpenUnifiedCalendar={() => setUnifiedCalendarOpen(true)}
-                streakCount={studentProfile.dailyStreak}
-                score={studentProfile.score}
-              />
-            )}
-
-            {activeTab === 'radar' && (
-              <RadarView
-                items={items}
-                commitments={commitments}
-                onSelectItem={(item) => setSelectedItem(item)}
-                onOpenUnconventionalFeatures={() => setUnconventionalWidgetOpen(true)}
-                isDark={isDark}
-                initialMode={radarSubMode}
-                onModeChange={setRadarSubMode}
-              />
-            )}
-
-            {activeTab === 'board' && (
-              <BoardView
-                commitments={commitments}
-                onSelectCommitment={(comm) => {
-                  const matched = items.find((i) => i.id === comm.itemId);
-                  if (matched) setSelectedItem(matched);
-                }}
-                onCompleteCommitment={handleCompleteCommitment}
-                onUnwatchCommitment={handleUnwatchCommitment}
-                onOpenUnconventionalFeatures={() => setUnconventionalWidgetOpen(true)}
-                initialSection={boardSection}
-                onSectionChange={setBoardSection}
-              />
-            )}
-
-            {activeTab === 'campus' && (
-              <CampusView
-                clubs={clubs}
-                wikiPages={wikiPages}
-                pipeline={pipeline}
-                currentRole={currentRole}
-                onChangeRole={(newRole) => {
-                  setCurrentRole(newRole);
-                  showToast(`Calibrated to ${newRole.replace('_', ' ').toUpperCase()}`);
-                }}
-                onAddTask={handleAddTask}
-                onAddWikiPage={handleAddWikiPage}
-                onNominateSuccessor={handleNominateSuccessor}
-                onOpenUnconventionalFeatures={() => setUnconventionalWidgetOpen(true)}
-                channels={channels}
-                messages={dispatchMessages}
-                onSendMessage={handleSendDispatch}
-                onConvertToActionableTask={handleConvertDispatchToActionableTask}
-                onOpenPerksBazaar={() => {
-                  setBazaarSubTab('bazaar');
-                  setActiveTab('bazaar');
-                  setRibbonOpen(false);
-                }}
-                onOpenDispatches={() => {
-                  setActiveTab('dispatches');
-                  setRibbonOpen(false);
-                }}
-                onOpenUnifiedCalendar={() => setUnifiedCalendarOpen(true)}
-                studentName={studentProfile.name}
-                isDark={isDark}
-                initialViewMode={campusSubMode}
-                onViewModeChange={setCampusSubMode}
-              />
-            )}
-
-            {/* Dedicated Calm Dispatch Communication Page */}
-            {activeTab === 'dispatches' && (
-              <DispatchesView
-                channels={channels}
-                messages={dispatchMessages}
-                currentRole={currentRole}
-                studentName={studentProfile.name}
-                onSendMessage={handleSendDispatch}
-                onConvertToActionableTask={handleConvertDispatchToActionableTask}
-                onNavigateBack={() => setActiveTab('campus')}
-                onOpenCatchupDigest={() => setCatchupDigestModalOpen(true)}
-                friends={friendsList}
-                onAddFriend={(peer) => {
-                  setFriendsList((prev) => [peer, ...prev]);
-                  showToast(`Peer added: ${peer.name} (${peer.trustLevel})`);
-                }}
-                isDark={isDark}
-              />
-            )}
-
-            {/* Dedicated Physical Perks Bazaar Page */}
-            {activeTab === 'bazaar' && (
-              <PerksBazaarView
-                perks={perks}
-                profile={studentProfile}
-                onRedeemPerk={handleRedeemPerk}
-                onMarkPerkUsed={handleMarkPerkUsed}
-                onNavigateBack={() => setActiveTab('campus')}
-                isDark={isDark}
-                initialTab={bazaarSubTab}
-              />
-            )}
-          </main>
-
-          {/* Dismiss backdrop for sheets if active */}
-          {(glassSheetOpen || detailSheetOpen) && (
-            <div
-              className="absolute inset-0 z-35 bg-black/50 backdrop-blur-[2px] transition-opacity cursor-pointer"
-              onClick={() => {
-                setGlassSheetOpen(false);
-                setDetailSheetOpen(false);
-              }}
-              aria-label="Dismiss sheet"
-            />
-          )}
-
-          {/* Inset Glass Settings Sheet from reference */}
-          <div className={`glass-sheet ${glassSheetOpen ? 'visible' : ''}`} id="glassSheet">
-            <div className="glass-sheet-header">
-              <div className="glass-sheet-title">Campus Preferences</div>
-              <button
-                className="glass-sheet-close"
-                id="closeGlassBtn"
-                type="button"
-                onClick={() => setGlassSheetOpen(false)}
-              >
-                &times;
-              </button>
+            {/* Quick Toast Notification */}
+            <div className={`toast ${toastMessage ? 'show' : ''}`} id="toast">
+              {toastMessage}
             </div>
+
+            {/* Dynamic Island / Top Notch */}
             <div
-              className="glass-row"
-              onClick={() => {
-                const next = !instantNotif;
-                setInstantNotif(next);
-                showToast(`Instant alerts: ${next ? 'Active' : 'Muted'}`);
-              }}
+              className={`dynamic-notch ${notchPulsing ? 'pulse-active' : ''}`}
+              id="dynamicNotch"
             >
-              <span>Instant Notifications</span>
-              <div className={`ios-switch ${instantNotif ? 'on' : ''}`} id="toggleNotif">
-                <div className="thumb" />
+              <div className="lens" />
+              <div className="indicator" id="notchIndicator" />
+            </div>
+
+            {/* Status Bar */}
+            <div className="status-bar">
+              <span className="status-time" id="clock">{currentTime}</span>
+              <div className="status-icons">
+                <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor">
+                  <rect x="0" y="3" width="3" height="9" rx="0.5" />
+                  <rect x="4.5" y="2" width="3" height="10" rx="0.5" />
+                  <rect x="9" y="0.5" width="3" height="11.5" rx="0.5" />
+                  <rect x="13.5" y="0" width="3" height="12" rx="0.5" opacity="0.35" />
+                </svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+                  <path d="M1 4.5C2.8 2.7 5.2 1.6 8 1.6S13.2 2.7 15 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  <path d="M3.2 6.8A6.2 6.2 0 018 5.2c1.9 0 3.6.7 4.8 1.6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  <path d="M5.5 9a3.5 3.5 0 015 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  <circle cx="8" cy="11" r="1" fill="currentColor" />
+                </svg>
+                <svg width="27" height="13" viewBox="0 0 27 13">
+                  <rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="currentColor" strokeOpacity="0.35" fill="none" />
+                  <rect x="2" y="2" width="17" height="9" rx="2" fill="currentColor" />
+                  <rect x="23.5" y="4" width="3" height="5" rx="1" fill="currentColor" fillOpacity="0.4" />
+                </svg>
               </div>
             </div>
-            <div
-              className="glass-row"
-              onClick={() => {
-                const next = !calendarSync;
-                setCalendarSync(next);
-                showToast(`Calendar Sync: ${next ? 'Linked' : 'Detached'}`);
-              }}
-            >
-              <span>Calendar Sync (iCal)</span>
-              <div className={`ios-switch ${calendarSync ? 'on' : ''}`} id="toggleSync">
-                <div className="thumb" />
-              </div>
-            </div>
-            <div
-              className="glass-row"
-              onClick={() => {
-                setGlassSheetOpen(false);
-                setSettingsOpen(true);
-              }}
-            >
-              <span className="text-[var(--accent)] font-semibold">Full System Calibration</span>
-              <span className="text-[14px] text-[var(--meta)]">&rsaquo;</span>
-            </div>
-          </div>
 
-          {/* Slide-Up Bottom Detail Sheet matching reference */}
-          <div className={`detail-sheet ${detailSheetOpen ? 'show' : ''}`} id="detailSheet">
-            <div className="relative w-full">
+            {/* Active View */}
+            <main className="w-full flex-1 min-h-0 overflow-hidden flex flex-col relative">
+              {renderActiveView()}
+            </main>
+
+            {/* Dismiss backdrop for sheets if active */}
+            {(glassSheetOpen || detailSheetOpen || ribbonOpen) && (
               <div
-                className="grab"
-                onClick={() => setDetailSheetOpen(false)}
-                role="button"
-                tabIndex={0}
-                aria-label="Close detail sheet"
+                className="absolute inset-0 z-35 bg-black/50 backdrop-blur-[2px] transition-opacity cursor-pointer"
+                onClick={() => {
+                  setGlassSheetOpen(false);
+                  setDetailSheetOpen(false);
+                  setRibbonOpen(false);
+                }}
+                aria-label="Dismiss sheet"
               />
-              <button
-                type="button"
-                onClick={() => setDetailSheetOpen(false)}
-                className="absolute top-0 right-0 p-1 text-[var(--meta)] hover:text-white rounded-full transition-colors text-lg leading-none"
-                aria-label="Close"
-              >
-                &times;
-              </button>
-            </div>
-            <h3>Robotics Olympiad — Regional</h3>
-            <p>
-              Springfield High · Gym A · Team of 4 · Bring laptop + hardware kit. Mr. Rahman will finalize the team roster tonight at 8:00 PM.
-            </p>
-            <div className="detail-meta">
-              <div>
-                <b>6h</b>
-                <span>Left</span>
-              </div>
-              <div>
-                <b>12</b>
-                <span>Spots</span>
-              </div>
-              <div>
-                <b>$10</b>
-                <span>Fee</span>
-              </div>
-            </div>
-            <button
-              className="cta"
-              id="applyBtn"
-              type="button"
-              onClick={() => {
-                showToast('Application drafted · Check Board');
-                setDetailSheetOpen(false);
-                if (items[0]) handleCommitItem(items[0]);
-              }}
-            >
-              Apply now &rarr;
-            </button>
+            )}
+
+            {renderSheets()}
+
+            {/* Floating Clay Navigation Bar with 2-Tap Unrolling Ribbon */}
+            {renderNavBar()}
+
+            {/* iPhone Home Indicator Bar */}
+            <div className="home-bar" />
           </div>
+        ) : (
+          <div className="device-expanded" id="deviceContainer">
+            {/* Ambient orbs & grain background matching reference */}
+            <div className="device-bg">
+              <div className="orb1" />
+              <div className="orb2" />
+              <div className="grain" />
+            </div>
 
-          {/* Floating Clay Navigation Bar with 2-Tap Unrolling Ribbon */}
-          <NavBar
-            activeTab={activeTab}
-            ribbonTab={ribbonTab}
-            ribbonOpen={ribbonOpen}
-            onNavClick={handleNavClick}
-            onSelectRibbonItem={handleSelectRibbonItem}
-            onOpenSettings={() => {
-              setGlassSheetOpen(true);
-              setRibbonOpen(false);
-            }}
-            onOpenProfile={() => {
-              setProfileModalOpen(true);
-              setRibbonOpen(false);
-            }}
-            profileScore={studentProfile.score}
-            isDark={isDark}
-          />
+            {/* Quick Toast Notification */}
+            <div className={`toast ${toastMessage ? 'show' : ''}`} id="toast">
+              {toastMessage}
+            </div>
 
-          {/* iPhone Home Indicator Bar */}
-          <div className="home-bar" />
-        </div>
+            {/* Expanded Computer Screen Layout: Top-Left Mounted Navigation Bar + Expanded Content */}
+            <div className="w-full flex-1 flex flex-row items-stretch relative z-10 min-h-0 h-full overflow-hidden">
+              {/* Left Rail: Top-Left Vertical Navigation & Detached Bottom-Left Pill */}
+              <div className="shrink-0 h-full flex flex-col z-40 bg-transparent">
+                <DesktopSidebar
+                  activeTab={activeTab}
+                  ribbonTab={ribbonTab}
+                  ribbonOpen={ribbonOpen}
+                  onNavClick={handleNavClick}
+                  onSelectRibbonItem={handleSelectRibbonItem}
+                  onOpenSettings={() => {
+                    setSettingsOpen(true);
+                    setRibbonOpen(false);
+                  }}
+                  onOpenProfile={() => {
+                    setProfileModalOpen(true);
+                    setRibbonOpen(false);
+                  }}
+                  profileScore={studentProfile.score}
+                  dailyStreak={studentProfile.dailyStreak}
+                  currentRole={currentRole}
+                  isDark={isDark}
+                  onSwitchToDeviceFrame={() => setIsDeviceFrame(true)}
+                />
+              </div>
+
+              {/* Expanded Main Workspace: Fully expands to fit window width */}
+              <main className="flex-1 min-w-0 h-full flex flex-col relative overflow-hidden bg-transparent">
+                {renderActiveView()}
+              </main>
+            </div>
+
+            {/* Dismiss backdrop for sheets if active */}
+            {(glassSheetOpen || detailSheetOpen) && (
+              <div
+                className="absolute inset-0 z-35 bg-black/50 backdrop-blur-[2px] transition-opacity cursor-pointer"
+                onClick={() => {
+                  setGlassSheetOpen(false);
+                  setDetailSheetOpen(false);
+                }}
+                aria-label="Dismiss sheet"
+              />
+            )}
+
+            {renderSheets()}
+          </div>
+        )}
       </div>
 
       {/* Glass Modals and Overlays */}
@@ -1372,6 +1463,7 @@ export default function App() {
         onCompleteCommitment={handleCompleteCommitment}
         onShowToast={showToast}
         isDark={isDark}
+        isDeviceFrame={isDeviceFrame}
       />
     </div>
   );

@@ -111,9 +111,9 @@ export const CatchupDigestModal: React.FC<CatchupDigestModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs android-popup-backdrop">
       <div
-        className={`relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-[24px] shadow-2xl border overflow-hidden ${
+        className={`relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-[24px] shadow-2xl border overflow-hidden android-popup-widget ${
           isDark
             ? 'bg-[#14171F] border-[rgba(255,255,255,0.1)] text-[#E8ECF2]'
             : 'bg-white border-[#E2E8F0] text-[#1E293B]'
@@ -122,7 +122,7 @@ export const CatchupDigestModal: React.FC<CatchupDigestModalProps> = ({
         {/* Header */}
         <div className="p-5 sm:p-6 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[14px] bg-[rgba(56,189,248,0.15)] flex items-center justify-center border border-[rgba(56,189,248,0.3)] text-sky-400">
+            <div className="w-10 h-10 rounded-[14px] bg-[var(--track)] flex items-center justify-center border border-[var(--rule)] text-[var(--accent)]">
               <Zap className="w-5 h-5" />
             </div>
             <div>
@@ -130,8 +130,8 @@ export const CatchupDigestModal: React.FC<CatchupDigestModalProps> = ({
                 <h2 className="text-[18px] sm:text-[20px] font-extrabold tracking-tight">
                   Catch-up Digest
                 </h2>
-                <span className="px-2 py-0.5 rounded-[8px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10.5px] font-bold tracking-wide uppercase flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" />
+                <span className="px-2 py-0.5 rounded-[6px] bg-[var(--tile-active)] border border-[var(--rule)] text-[var(--text-sub)] text-[10.5px] font-medium tracking-wide flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
                   <span>Surveillance-Shielded</span>
                 </span>
               </div>
@@ -243,7 +243,7 @@ export const CatchupDigestModal: React.FC<CatchupDigestModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <h3 className="text-[13px] font-bold uppercase tracking-wider text-[var(--text)] flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />
                 <span>Addition-Worthy Tasks &amp; Commitments</span>
               </h3>
               <span className="text-[11.5px] text-[var(--meta)]">
@@ -259,19 +259,13 @@ export const CatchupDigestModal: React.FC<CatchupDigestModalProps> = ({
                     key={task.id}
                     className={`p-3.5 rounded-[16px] border transition-all flex items-start sm:items-center justify-between gap-3 ${
                       isClaimed
-                        ? 'bg-emerald-500/10 border-emerald-500/30 opacity-90'
-                        : 'bg-[var(--tile)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.15)]'
+                        ? 'bg-[var(--tile-active)] border-[var(--rule)] opacity-85'
+                        : 'bg-[var(--tile)] border-[rgba(255,255,255,0.06)] hover:-translate-y-0.5 hover:shadow-xs'
                     }`}
                   >
                     <div className="space-y-1 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`text-[10.5px] px-2 py-0.5 rounded-[6px] font-bold uppercase ${
-                            task.channelCategory === 'private'
-                              ? 'bg-purple-500/20 text-purple-300'
-                              : 'bg-sky-500/20 text-sky-300'
-                          }`}
-                        >
+                        <span className="text-[10.5px] px-2 py-0.5 rounded-[6px] font-semibold uppercase bg-[var(--track)] border border-[var(--rule)] text-[var(--text-sub)]">
                           {task.channelName}
                         </span>
                         <span className="text-[11px] text-[var(--meta)]">
@@ -286,7 +280,7 @@ export const CatchupDigestModal: React.FC<CatchupDigestModalProps> = ({
                           <Clock className="w-3.5 h-3.5" />
                           <span>{task.deadline}</span>
                         </span>
-                        <span className="font-bold text-emerald-400">
+                        <span className="font-bold text-[var(--amber)]">
                           +{task.points} pts
                         </span>
                       </div>
@@ -298,8 +292,8 @@ export const CatchupDigestModal: React.FC<CatchupDigestModalProps> = ({
                       onClick={() => handleClaim(task)}
                       className={`px-3.5 py-2 rounded-[12px] text-[12px] font-bold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
                         isClaimed
-                          ? 'bg-emerald-500 text-white cursor-default'
-                          : 'bg-[var(--accent)] text-white hover:opacity-95 active:scale-95 shadow-xs'
+                          ? 'bg-[var(--track)] text-[var(--text-sub)] border border-[var(--rule)] cursor-default'
+                          : 'bg-[var(--accent)] text-white hover:brightness-110 active:scale-95 shadow-xs'
                       }`}
                     >
                       {isClaimed ? (
@@ -324,13 +318,13 @@ export const CatchupDigestModal: React.FC<CatchupDigestModalProps> = ({
         {/* Footer */}
         <div className="p-4 bg-[var(--track)] border-t border-[rgba(255,255,255,0.06)] flex items-center justify-between">
           <div className="flex items-center gap-2 text-[12px] text-[var(--meta)]">
-            <Lock className="w-3.5 h-3.5 text-emerald-400" />
+            <Lock className="w-3.5 h-3.5 text-[var(--meta)]" />
             <span>Encrypted local storage enclave · Authority blinded</span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-[10px] bg-[var(--tile)] border border-[rgba(255,255,255,0.08)] text-[12.5px] font-semibold text-[var(--text)] hover:border-[var(--accent)]"
+            className="px-4 py-1.5 rounded-[10px] bg-[var(--tile)] border border-[rgba(255,255,255,0.08)] text-[12.5px] font-semibold text-[var(--text)] hover:-translate-y-0.5 hover:shadow-xs transition-all cursor-pointer"
           >
             Done
           </button>

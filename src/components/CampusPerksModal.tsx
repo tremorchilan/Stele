@@ -75,9 +75,9 @@ export const CampusPerksModal: React.FC<CampusPerksModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs android-popup-backdrop">
       <div
-        className={`relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-[24px] shadow-2xl border overflow-hidden ${
+        className={`relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-[24px] shadow-2xl border overflow-hidden android-popup-widget ${
           isDark
             ? 'bg-[#14171F] border-[rgba(255,255,255,0.1)] text-[#E8ECF2]'
             : 'bg-white border-[#E2E8F0] text-[#1E293B]'
@@ -149,7 +149,7 @@ export const CampusPerksModal: React.FC<CampusPerksModalProps> = ({
             >
               <span>My Vouchers</span>
               {activeVouchers.length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-white text-[10px] font-black">
+                <span className="px-1.5 py-0.2 rounded-full bg-[var(--accent)] text-white text-[10px] font-black">
                   {activeVouchers.length}
                 </span>
               )}
@@ -255,15 +255,15 @@ export const CampusPerksModal: React.FC<CampusPerksModalProps> = ({
                         onClick={() => setSelectedVoucher(voucher)}
                         className={`p-4 rounded-[20px] border cursor-pointer transition-all ${
                           isActive
-                            ? 'bg-[var(--tile)] border-emerald-500/40 hover:border-emerald-500 shadow-xs'
+                            ? 'bg-[var(--tile)] border-[var(--rule)] hover:border-[var(--accent)] shadow-xs'
                             : 'bg-[var(--tile)]/50 border-[rgba(255,255,255,0.04)] opacity-60'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <span
-                            className={`px-2 py-0.5 rounded-[6px] text-[10px] font-black uppercase tracking-wider ${
+                            className={`px-2 py-0.5 rounded-[6px] text-[10px] font-semibold uppercase tracking-wider ${
                               isActive
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                ? 'bg-[var(--tile-active)] text-[var(--accent)] border border-[var(--rule)]'
                                 : 'bg-[rgba(255,255,255,0.06)] text-[var(--meta)]'
                             }`}
                           >
@@ -299,7 +299,7 @@ export const CampusPerksModal: React.FC<CampusPerksModalProps> = ({
         {/* Footer info banner */}
         <div className="px-5 py-3 bg-[rgba(255,255,255,0.02)] border-t border-[rgba(255,255,255,0.06)] flex items-center justify-between text-[11.5px] text-[var(--meta)]">
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
             <span>Campus physical vouchers authenticated via Sovereign Invariant Ledger.</span>
           </div>
           <span>Non-transferable</span>
@@ -351,7 +351,7 @@ export const CampusPerksModal: React.FC<CampusPerksModalProps> = ({
           <div className="w-full max-w-sm rounded-[24px] bg-[var(--canvas)] border border-[rgba(255,255,255,0.15)] shadow-2xl overflow-hidden">
             <div className="p-4 bg-[var(--tile)] border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
                 <span className="text-[12.5px] font-extrabold uppercase tracking-wide text-[var(--text)]">
                   Campus Physical Pass
                 </span>
@@ -367,9 +367,9 @@ export const CampusPerksModal: React.FC<CampusPerksModalProps> = ({
 
             <div className="p-5 text-center">
               <span
-                className={`inline-block px-2.5 py-0.5 rounded-[8px] text-[10.5px] font-black uppercase tracking-wider mb-2 ${
+                className={`inline-block px-2.5 py-0.5 rounded-[8px] text-[10.5px] font-bold uppercase tracking-wider mb-2 ${
                   selectedVoucher.status === 'active'
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    ? 'bg-[var(--tile-active)] text-[var(--accent)] border border-[var(--rule)]'
                     : 'bg-[rgba(255,255,255,0.06)] text-[var(--meta)]'
                 }`}
               >
@@ -445,7 +445,7 @@ export const CampusPerksModal: React.FC<CampusPerksModalProps> = ({
                       onMarkPerkUsed(selectedVoucher.id);
                       setSelectedVoucher((prev) => (prev ? { ...prev, status: 'used' } : null));
                     }}
-                    className="w-full py-2.5 px-3 rounded-[12px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] shadow-sm flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 px-3 rounded-[12px] bg-[var(--accent)] hover:brightness-110 active:scale-95 transition-all text-white font-bold text-[12px] shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" /> Mark as Redeemed by Staff
                   </button>

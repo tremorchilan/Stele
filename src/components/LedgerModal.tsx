@@ -44,13 +44,13 @@ export const LedgerModal: React.FC<LedgerModalProps> = ({
   return (
     <div
       id="ledger-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md android-popup-backdrop"
       onClick={onClose}
     >
       <div
         id="ledger-modal-card"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 md:p-8 rounded-[26px] stele-glassmorphic-overlay text-[var(--text)]"
+        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-6 md:p-8 rounded-[26px] stele-glassmorphic-overlay text-[var(--text)] android-popup-widget"
         style={{
           background: 'rgba(26, 26, 32, 0.82)',
           backdropFilter: 'blur(28px) saturate(190%)',

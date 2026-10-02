@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   MessageSquare,
   ShieldCheck,
@@ -8,13 +8,10 @@ import {
   Clock,
   AlertCircle,
   BellOff,
-  ArrowRight,
   User,
-  FileText,
   Lock,
   ShieldAlert,
   Search,
-  EyeOff,
   Check,
   X,
   Paperclip,
@@ -22,19 +19,26 @@ import {
   MoreVertical,
   Bot,
   Building2,
-  GraduationCap,
   Users,
-  Terminal,
   Copy,
-  ChevronRight,
-  Eye,
+  Phone,
+  Video,
+  ChevronDown,
+  Mic,
+  Camera,
+  FileText,
+  Radio,
+  CircleDashed,
+  Archive,
+  Settings,
+  CornerUpLeft,
+  Image as ImageIcon,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   CommunicationChannel,
   DispatchMessage,
   Role,
-  ChannelCategory,
-  InstitutionalKnowledgeQuery,
 } from '../types';
 import { INSTITUTIONAL_KNOWLEDGE_BASE } from '../data/mockData';
 
@@ -66,13 +70,24 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
   initialChannelId,
   openAiDigestDirectly = false,
 }) => {
-  // Telegram-style folder tabs: All, Official, Commons, Direct
-  const [activeFolder, setActiveFolder] = useState<'all' | 'official' | 'commons' | 'direct'>('all');
+  // Navigation rail active tab
+  const [navTab, setNavTab] = useState<'chats' | 'calls' | 'status' | 'channels' | 'communities' | 'meta_ai' | 'settings'>('chats');
+
+  // Filter chips (matching reference WhatsApp UI)
+  const [filterChip, setFilterChip] = useState<'all' | 'unread' | 'groups' | 'me' | 'official' | 'commons'>('all');
+  
+  // Selected channel
   const [selectedChannelId, setSelectedChannelId] = useState<string>(
-    initialChannelId || channels[0]?.id || 'ch-circulars'
+    initialChannelId || channels[0]?.id || 'ch-cultured-memers'
   );
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
+  const [showNotificationBanner, setShowNotificationBanner] = useState(true);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showMenuDropdown, setShowMenuDropdown] = useState(false);
+  const [selectedImagePreview, setSelectedImagePreview] = useState<string | null>(null);
 
   // AI & Anti-Surveillance state
   const [aiExtracting, setAiExtracting] = useState<string | null>(null);
@@ -82,43 +97,70 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
   const [aiDigestModalOpen, setAiDigestModalOpen] = useState(openAiDigestDirectly);
   const [copiedDigest, setCopiedDigest] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
 
   const showToast = (msg: string) => {
     setFeedbackToast(msg);
     setTimeout(() => setFeedbackToast((cur) => (cur === msg ? null : cur)), 2500);
   };
 
-  // Filter channels based on Telegram-like folder tabs & search
+  // Filter channels based on WhatsApp chips and search query
   const filteredChannels = useMemo(() => {
     return channels.filter((ch) => {
-      // Search query filter
+      // Search filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchName = ch.name.toLowerCase().includes(q);
-        const matchDesc = ch.description.toLowerCase().includes(q);
+        const matchDesc = ch.description?.toLowerCase().includes(q);
         const matchPeer = ch.dmPeerName?.toLowerCase().includes(q);
-        if (!matchName && !matchDesc && !matchPeer) return false;
+        const matchLast = ch.lastMessage?.toLowerCase().includes(q);
+        if (!matchName && !matchDesc && !matchPeer && !matchLast) return false;
       }
 
-      // Folder filter
-      if (activeFolder === 'official') {
-        return ch.category === 'authority' || ch.category === 'faculty';
-      }
-      if (activeFolder === 'commons') {
-        return ch.category === 'section' || ch.category === 'class' || ch.category === 'club' || ch.category === 'noninstitutional';
-      }
-      if (activeFolder === 'direct') {
-        return ch.category === 'dm';
-      }
+      // Filter chips
+      if (filterChip === 'unread') return ch.unreadCount > 0;
+      if (filterChip === 'groups') return ch.category === 'club' || ch.category === 'section' || ch.participantCount > 2;
+      if (filterChip === 'official') return ch.category === 'authority' || ch.category === 'faculty';
+      if (filterChip === 'commons') return ch.privacySphere === 'student_commons';
+      if (filterChip === 'me') return ch.isDirectMessage || ch.category === 'dm';
       return true;
     });
-  }, [channels, activeFolder, searchQuery]);
+  }, [channels, filterChip, searchQuery]);
 
   const activeChannel =
     channels.find((c) => c.id === selectedChannelId) || filteredChannels[0] || channels[0];
+  
   const channelMessages = messages.filter((m) => m.channelId === activeChannel?.id);
 
-  // Anti-Surveillance Gate:
+  // Auto scroll to bottom when messages update - container-scoped to prevent view lock
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [channelMessages.length, selectedChannelId]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setIsScrolledUp(scrollHeight - scrollTop - clientHeight > 180);
+  };
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // Anti-Surveillance Gate
   const isAuthorityOrTeacher = currentRole === 'authority' || currentRole === 'teacher';
   const isBlockedBySurveillanceShield =
     (activeChannel?.privacySphere === 'student_commons' ||
@@ -130,6 +172,8 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
     if (!draftMessage.trim() || !activeChannel || isBlockedBySurveillanceShield) return;
     onSendMessage(activeChannel.id, draftMessage.trim());
     setDraftMessage('');
+    setShowEmojiPicker(false);
+    setShowAttachMenu(false);
   };
 
   // AI Task Extractor from peer bubbles
@@ -142,13 +186,13 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
 
       const content = msg.content.toLowerCase();
       if (content.includes('laser cutter') || content.includes('bay 3')) {
-        extractedTitle = 'Laser Cutter Steward Sign-off in Bay 3';
-        extractedDeadline = 'Friday, 5:00 PM';
+        extractedTitle = 'Review Bay 3 Laser Cutter Logic Schematic';
+        extractedDeadline = 'Tomorrow, 5:00 PM';
         points = 60;
-      } else if (content.includes('thermodynamics') || content.includes('tray')) {
+      } else if (content.includes('thermodynamics') || content.includes('tray') || content.includes('204')) {
         extractedTitle = 'Submit Thermodynamics Worksheet into Tray 204';
         extractedDeadline = 'Today, 2:00 PM';
-        points = 25;
+        points = 40;
       } else if (content.includes('calculator') || content.includes('physics')) {
         extractedTitle = 'Bring Non-Programmable Calculator for Physics Assessment';
         extractedDeadline = 'Today, 3:30 PM';
@@ -156,21 +200,21 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
       }
 
       onConvertToActionableTask({
-        title: extractedTitle,
-        deadline: extractedDeadline,
-        points,
+        title: msg.actionableTask?.title || extractedTitle,
+        deadline: msg.actionableTask?.deadline || extractedDeadline,
+        points: msg.actionableTask?.points || points,
         channelName: activeChannel.name,
       });
 
       setAiExtracting(null);
-      showToast(`Action Item Extracted: "${extractedTitle}" (+${points} pts)`);
+      showToast(`Action Item Extracted: "${msg.actionableTask?.title || extractedTitle}" (+${msg.actionableTask?.points || points} pts)`);
     }, 600);
   };
 
   // AI Channel Digest Content
   const channelDigest = useMemo(() => {
-    const isOfficial = activeChannel.category === 'authority' || activeChannel.category === 'faculty';
-    const isCommons = activeChannel.category === 'section';
+    const isOfficial = activeChannel?.category === 'authority' || activeChannel?.category === 'faculty';
+    const isCommons = activeChannel?.category === 'section' || activeChannel?.id === 'ch-cultured-memers';
 
     if (isOfficial) {
       return {
@@ -191,12 +235,12 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
       return {
         title: `AI Digest: ${activeChannel.name}`,
         bullets: [
-          'Thermodynamics Problem Set: Nadia confirmed step 2 requires converting Celsius to Kelvin to avoid violating the 2nd law of thermodynamics (pg 84).',
+          'Thermodynamics Problem Set: Nadia confirmed step 2 requires converting Celsius to Kelvin to avoid violating the 2nd law of thermodynamics.',
           'Physical submission cutoff: Hard-copy worksheets must be placed into homework tray outside Room 204 before 2:00 PM today.',
           'Hardware team line-follower chassis design completed; pending laser cutter slot in Bay 3.',
         ],
         tasks: [
-          { title: 'Submit Thermodynamics Problem Set into Tray 204', deadline: 'Today, 2:00 PM', points: 25 },
+          { title: 'Submit Thermodynamics Problem Set into Tray 204', deadline: 'Today, 2:00 PM', points: 40 },
         ],
       };
     }
@@ -227,6 +271,17 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
     setTimeout(() => setCopiedDigest(false), 2000);
   };
 
+  const getSenderColor = (name: string, role?: Role) => {
+    if (name.includes('Yeasar')) return 'text-[var(--accent)]';
+    if (name.includes('chinchinman')) return 'text-[#f59e0b]';
+    if (name.includes('MVruf')) return 'text-[#06b6d4]';
+    if (name.includes('Nadia')) return 'text-[#ec4899]';
+    if (name.includes('Tariq')) return 'text-[#8b5cf6]';
+    if (role === 'authority') return 'text-[#38bdf8]';
+    if (role === 'teacher') return 'text-[#fbbf24]';
+    return 'text-[var(--accent)]';
+  };
+
   const getChannelInitials = (ch: CommunicationChannel) => {
     if (ch.isDirectMessage && ch.dmPeerName) {
       return ch.dmPeerName.slice(0, 2).toUpperCase();
@@ -234,301 +289,612 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
     return ch.name.slice(0, 2).toUpperCase();
   };
 
-  const getSenderColor = (role: Role) => {
-    switch (role) {
-      case 'authority':
-        return 'text-sky-400';
-      case 'teacher':
-        return 'text-amber-400';
-      case 'steward':
-        return 'text-purple-400';
-      case 'loyal_core':
-        return 'text-emerald-400';
-      default:
-        return 'text-[var(--accent)]';
-    }
-  };
+  const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🍜', '🎓', '💻'];
 
   return (
-    <div className="flex flex-col rounded-[22px] bg-[var(--card)] border border-[var(--rule-default)] overflow-hidden shadow-2xl">
+    <div className="whatsapp-desktop-root flex w-full flex-1 min-h-0 h-full rounded-[14px] sm:rounded-[20px] overflow-hidden shadow-2xl border border-[var(--rule)] bg-[var(--tile)] text-[var(--text)] font-sans antialiased">
       {/* Toast Feedback */}
       {feedbackToast && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-[12px] bg-slate-900/95 text-white border border-slate-700 text-[12.5px] font-bold shadow-2xl flex items-center gap-2 animate-in fade-in duration-200">
-          <Check className="w-4 h-4 text-emerald-400" />
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[var(--tile-active)] text-[var(--text)] border border-[var(--accent)]/40 text-[13px] font-semibold shadow-2xl flex items-center gap-2 animate-in fade-in duration-200">
+          <Check className="w-4 h-4 text-[var(--accent)]" />
           <span>{feedbackToast}</span>
         </div>
       )}
 
-      {/* WhatsApp + Telegram Split Screen Layout */}
-      <div className="flex flex-col md:flex-row h-[620px] divide-y md:divide-y-0 md:divide-x divide-[var(--rule-default)]">
-        {/* ================= LEFT SIDEBAR (Telegram/WhatsApp Chat List) ================= */}
-        <div className="w-full md:w-80 md:min-w-[320px] flex flex-col bg-[var(--card)]">
-          {/* Top Search Bar */}
-          <div className="p-3 border-b border-[var(--rule-default)]">
+      {/* ================= COLUMN 1: LEFT VERTICAL ICON RAIL (~60px) ================= */}
+      <div className="hidden md:flex flex-col w-[60px] bg-[var(--tile)] border-r border-[var(--rule)] py-3 items-center justify-between shrink-0 z-20">
+        {/* Top Rail Navigation Icons */}
+        <div className="flex flex-col items-center gap-3 w-full">
+          {/* Chats Bubble with Red Badge */}
+          <button
+            type="button"
+            onClick={() => setNavTab('chats')}
+            className={`relative p-2.5 rounded-full transition-all cursor-pointer ${
+              navTab === 'chats' ? 'bg-[var(--tile-active)] text-[var(--accent)]' : 'text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)]'
+            }`}
+            title="Chats"
+          >
+            <MessageSquare className="w-5 h-5" />
+            <span className="absolute -top-0.5 -right-0.5 px-1.5 py-0.2 rounded-full bg-[#EF4444] text-white text-[10px] font-extrabold shadow-xs">
+              4
+            </span>
+          </button>
+
+          {/* Calls with Red Badge */}
+          <button
+            type="button"
+            onClick={() => setNavTab('calls')}
+            className={`relative p-2.5 rounded-full transition-all cursor-pointer ${
+              navTab === 'calls' ? 'bg-[var(--tile-active)] text-[var(--accent)]' : 'text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)]'
+            }`}
+            title="Calls"
+          >
+            <Phone className="w-5 h-5" />
+            <span className="absolute -top-0.5 -right-0.5 px-1.5 py-0.2 rounded-full bg-[#EF4444] text-white text-[10px] font-extrabold shadow-xs">
+              9
+            </span>
+          </button>
+
+          {/* Status Updates */}
+          <button
+            type="button"
+            onClick={() => setNavTab('status')}
+            className={`relative p-2.5 rounded-full transition-all cursor-pointer ${
+              navTab === 'status' ? 'bg-[var(--tile-active)] text-[var(--accent)]' : 'text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)]'
+            }`}
+            title="Status"
+          >
+            <CircleDashed className="w-5 h-5" />
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[var(--accent)] ring-2 ring-[var(--tile)]" />
+          </button>
+
+          {/* Channels / Broadcasts */}
+          <button
+            type="button"
+            onClick={() => setNavTab('channels')}
+            className={`p-2.5 rounded-full transition-all cursor-pointer ${
+              navTab === 'channels' ? 'bg-[var(--tile-active)] text-[var(--accent)]' : 'text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)]'
+            }`}
+            title="Channels"
+          >
+            <Radio className="w-5 h-5" />
+          </button>
+
+          {/* Communities */}
+          <button
+            type="button"
+            onClick={() => setNavTab('communities')}
+            className={`p-2.5 rounded-full transition-all cursor-pointer ${
+              navTab === 'communities' ? 'bg-[var(--tile-active)] text-[var(--accent)]' : 'text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)]'
+            }`}
+            title="Communities"
+          >
+            <Users className="w-5 h-5" />
+          </button>
+
+          {/* Meta AI / Sovereign AI Sparkle Ring */}
+          <button
+            type="button"
+            onClick={() => setAiDigestModalOpen(true)}
+            className="p-2.5 rounded-full transition-all cursor-pointer text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] group"
+            title="Sovereign AI Digest"
+          >
+            <div className="w-5 h-5 rounded-full border-2 border-dashed border-[var(--accent)] group-hover:rotate-45 transition-transform flex items-center justify-center">
+              <Sparkles className="w-2.5 h-2.5 text-[var(--accent)]" />
+            </div>
+          </button>
+        </div>
+
+        {/* Bottom Rail Icons */}
+        <div className="flex flex-col items-center gap-3 w-full">
+          {/* Media / Starred */}
+          <button
+            type="button"
+            onClick={() => showToast('Starred media & archives opened')}
+            className="p-2.5 rounded-full text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] transition-colors cursor-pointer"
+            title="Media & Archives"
+          >
+            <Archive className="w-5 h-5" />
+          </button>
+
+          {/* Settings */}
+          <button
+            type="button"
+            onClick={() => setPrivacyModalOpen(true)}
+            className="p-2.5 rounded-full text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] transition-colors cursor-pointer"
+            title="Settings & Privacy"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+
+          {/* User Profile Avatar with Online Dot */}
+          <div className="relative cursor-pointer" onClick={() => setPrivacyModalOpen(true)}>
+            <img
+              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80"
+              alt={studentName}
+              className="w-8 h-8 rounded-full object-cover border border-[var(--rule)]"
+            />
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--accent)] ring-2 ring-[var(--tile)]" />
+          </div>
+        </div>
+      </div>
+
+      {/* ================= COLUMN 2: CHAT LIST PANEL (~380px) ================= */}
+      <div className={`w-full md:w-[360px] lg:w-[400px] flex flex-col bg-[var(--tile)] border-r border-[var(--rule)] shrink-0 min-h-0 h-full overflow-hidden ${mobileChatOpen ? 'hidden md:flex' : 'flex'}`}>
+        {/* Header: Title + Action Icons */}
+        <div className="px-4 py-3 flex items-center justify-between bg-[var(--tile)]">
+          <h2 className="text-[20px] font-bold text-[var(--text)] tracking-tight flex items-center gap-2">
+            <span>WhatsApp</span>
+          </h2>
+
+          <div className="flex items-center gap-1">
+            {/* Options Dropdown */}
             <div className="relative">
-              <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search chats, circulars..."
-                className="w-full pl-9 pr-3 py-2 rounded-[12px] bg-[var(--canvas)] border border-[var(--rule-default)] text-[12.5px] text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-all"
-              />
-            </div>
+              <button
+                type="button"
+                onClick={() => setShowMenuDropdown(!showMenuDropdown)}
+                className="p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] transition-colors cursor-pointer"
+                title="Menu"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
 
-            {/* Telegram-style 4 Folders (Clean Segmented Control, No 8 Chunky Pills) */}
-            <div className="flex items-center gap-1 mt-2.5 p-1 rounded-[10px] bg-[var(--canvas)] border border-[var(--rule-default)]">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'official', label: 'Official' },
-                { id: 'commons', label: 'Commons' },
-                { id: 'direct', label: 'Direct' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveFolder(tab.id as any)}
-                  className={`flex-1 py-1 text-[11px] font-bold rounded-[7px] transition-all cursor-pointer text-center ${
-                    activeFolder === tab.id
-                      ? 'bg-[var(--accent)] text-white shadow-xs'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Chat List Scrollable */}
-          <div className="flex-1 overflow-y-auto divide-y divide-[var(--rule-default)]/40 no-scrollbar">
-            {filteredChannels.map((ch) => {
-              const isSelected = ch.id === activeChannel?.id;
-              const isOfficial = ch.category === 'authority' || ch.category === 'faculty';
-              const isCommons = ch.privacySphere === 'student_commons';
-              const isEncrypted = ch.privacySphere === 'peer_encrypted';
-
-              return (
-                <div
-                  key={ch.id}
-                  onClick={() => setSelectedChannelId(ch.id)}
-                  className={`p-3 transition-colors cursor-pointer flex items-center gap-3 ${
-                    isSelected
-                      ? 'bg-[var(--accent)]/15 border-l-4 border-l-[var(--accent)]'
-                      : 'hover:bg-[var(--canvas)]'
-                  }`}
-                >
-                  {/* Avatar Icon */}
-                  <div className="relative shrink-0">
-                    <div
-                      className={`w-11 h-11 rounded-full flex items-center justify-center font-bold font-mono text-[13px] ${
-                        isOfficial
-                          ? 'bg-sky-500/20 text-sky-400 ring-2 ring-sky-500/30'
-                          : isCommons
-                          ? 'bg-emerald-500/20 text-emerald-400 ring-2 ring-emerald-500/30'
-                          : 'bg-purple-500/20 text-purple-400 ring-2 ring-purple-500/30'
-                      }`}
-                    >
-                      {isOfficial ? <Building2 className="w-5 h-5" /> : getChannelInitials(ch)}
-                    </div>
-                    {isOfficial && (
-                      <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-sky-500 text-white flex items-center justify-center text-[9px] font-bold">
-                        ✓
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Info & Last Message */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <span className="text-[13px] font-bold text-[var(--text-primary)] truncate flex items-center gap-1">
-                        {ch.isDirectMessage ? ch.dmPeerName : ch.name}
-                        {isEncrypted && <Lock className="w-3 h-3 text-purple-400 shrink-0" />}
-                      </span>
-                      <span className="text-[10.5px] text-[var(--text-secondary)] font-mono shrink-0">
-                        {isOfficial ? '08:15 AM' : '10:22 AM'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-1">
-                      <p className="text-[11.5px] text-[var(--text-secondary)] truncate">
-                        {isOfficial ? 'Official Circular: Fabrication Annex Bay 3...' : 'Life saver Nadia! Remember we need to...'}
-                      </p>
-
-                      {ch.unreadCount > 0 && !isSelected && (
-                        <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[9.5px] font-bold font-mono flex items-center justify-center shrink-0">
-                          {ch.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+              {showMenuDropdown && (
+                <div className="absolute right-0 top-10 w-48 rounded-[12px] bg-[var(--tile-active)] border border-[var(--rule)] shadow-2xl py-1.5 z-50 text-[13.5px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenuDropdown(false);
+                      setAiDigestModalOpen(true);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-[var(--track)] flex items-center gap-2 text-[var(--text)]"
+                  >
+                    <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+                    <span>AI Quick Digest</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenuDropdown(false);
+                      setKnowledgeResolverOpen(true);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-[var(--track)] flex items-center gap-2 text-[var(--text)]"
+                  >
+                    <Bot className="w-4 h-4 text-[#38bdf8]" />
+                    <span>Campus Bot</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenuDropdown(false);
+                      setPrivacyModalOpen(true);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-[var(--track)] flex items-center gap-2 text-[var(--text)]"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
+                    <span>Privacy Charter</span>
+                  </button>
                 </div>
-              );
-            })}
-
-            {filteredChannels.length === 0 && (
-              <div className="p-8 text-center text-[12.5px] text-[var(--text-muted)]">
-                No chats found in this folder.
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Anti-Surveillance Indicator */}
-          <div className="p-2.5 px-3.5 border-t border-[var(--rule-default)] bg-[var(--canvas)] flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Sovereign Enclave Active</span>
+              )}
             </div>
+
+            {/* Circular Stele Accent New Chat Button (+) */}
             <button
               type="button"
-              onClick={() => setPrivacyModalOpen(true)}
-              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-[10.5px] underline cursor-pointer"
+              onClick={() => showToast('New dispatch conversation started')}
+              className="w-8 h-8 rounded-full bg-[var(--accent)] hover:bg-[#E8684D] text-white flex items-center justify-center font-bold transition-transform active:scale-95 cursor-pointer shadow-md"
+              title="New Chat"
             >
-              Charter
+              <span className="text-[20px] leading-none mb-0.5">+</span>
             </button>
           </div>
         </div>
 
-        {/* ================= RIGHT CONVERSATION PANE (WhatsApp/Telegram Experience) ================= */}
-        <div className="flex-1 flex flex-col bg-[var(--canvas)]">
-          {/* WhatsApp / Telegram Chat Header */}
-          <div className="p-3 sm:px-4 border-b border-[var(--rule-default)] bg-[var(--card)] flex items-center justify-between gap-3 shrink-0 shadow-xs">
-            <div className="flex items-center gap-3 min-w-0">
+        {/* Search Bar */}
+        <div className="px-3 pb-2 bg-[var(--tile)]">
+          <div className="relative flex items-center bg-[var(--track)] rounded-[10px] px-3 py-1.5 border border-[var(--rule)] focus-within:border-[var(--accent)] transition-colors">
+            <Search className="w-4 h-4 text-[var(--meta)] shrink-0 mr-3" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search or start a new chat"
+              className="w-full bg-transparent text-[13px] text-[var(--text)] placeholder-[var(--meta)] outline-none"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="text-[var(--meta)] hover:text-[var(--text)]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter Chips (Horizontally Scrollable) */}
+        <div className="px-3 pb-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar bg-[var(--tile)]">
+          {[
+            { id: 'all', label: 'All', color: 'var(--accent)' },
+            { id: 'unread', label: 'Unread', color: '#F59E0B', textColor: '#0F172A' },
+            { id: 'groups', label: 'Groups', color: '#0284C7' },
+            { id: 'me', label: 'Me', color: '#8B5CF6' },
+            { id: 'official', label: 'Official', color: '#10B981' },
+            { id: 'commons', label: 'Commons', color: '#F59E0B', textColor: '#0F172A' },
+          ].map((chip) => {
+            const isSelected = filterChip === chip.id;
+            return (
+              <button
+                key={chip.id}
+                type="button"
+                onClick={() => setFilterChip(chip.id as any)}
+                className={`px-3 py-1 rounded-full text-[12px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  isSelected
+                    ? 'shadow-xs border'
+                    : 'bg-[var(--track)] text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] border border-[var(--rule)]'
+                }`}
+                style={
+                  isSelected
+                    ? {
+                        backgroundColor: chip.color,
+                        borderColor: chip.color,
+                        color: chip.textColor || '#FFFFFF',
+                      }
+                    : undefined
+                }
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Dismissible Notification Banner */}
+        {showNotificationBanner && (
+          <div className="px-3 py-2.5 mx-3 mb-2 rounded-[10px] bg-[var(--tile-active)] border border-[var(--rule)] flex items-center justify-between gap-2.5 text-[12.5px]">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center shrink-0">
+                <BellOff className="w-4 h-4" />
+              </div>
+              <div className="truncate text-[var(--text)]">
+                <span>Message and call notifications are off. </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    showToast('Notifications enabled for sovereign dispatches');
+                    setShowNotificationBanner(false);
+                  }}
+                  className="text-[var(--accent)] font-medium hover:underline cursor-pointer"
+                >
+                  Turn on
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowNotificationBanner(false)}
+              className="text-[var(--meta)] hover:text-[var(--text)] shrink-0 p-1 cursor-pointer"
+              title="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Conversation List Scrollable */}
+        <div className="flex-1 overflow-y-auto no-scrollbar divide-y divide-[var(--rule)]/40">
+          {filteredChannels.map((ch) => {
+            const isSelected = ch.id === activeChannel?.id;
+            const isOfficial = ch.category === 'authority' || ch.category === 'faculty';
+            const isGroup = ch.category === 'club' || ch.category === 'section' || ch.participantCount > 2;
+
+            return (
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-[13px] shrink-0 ${
-                  activeChannel.category === 'authority' || activeChannel.category === 'faculty'
-                    ? 'bg-sky-500/20 text-sky-400'
-                    : activeChannel.privacySphere === 'student_commons'
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'bg-purple-500/20 text-purple-400'
+                key={ch.id}
+                onClick={() => {
+                  setSelectedChannelId(ch.id);
+                  setMobileChatOpen(true);
+                }}
+                className={`px-3 py-2.5 flex items-center gap-3 transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'bg-[var(--tile-active)] border-l-3 border-[var(--accent)]'
+                    : 'hover:bg-[var(--tile-active)]/70'
                 }`}
               >
-                {activeChannel.category === 'authority' ? <Building2 className="w-5 h-5" /> : getChannelInitials(activeChannel)}
-              </div>
+                {/* Circular Avatar */}
+                <div className="relative shrink-0">
+                  {ch.avatarUrl ? (
+                    <img
+                      src={ch.avatarUrl}
+                      alt={ch.name}
+                      className="w-12 h-12 rounded-full object-cover border border-[var(--rule)]"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-[var(--track)] border border-[var(--rule)] text-[var(--text)] flex items-center justify-center font-bold text-[14px]">
+                      {isOfficial ? <Building2 className="w-5 h-5 text-[var(--accent)]" /> : getChannelInitials(ch)}
+                    </div>
+                  )}
 
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h3 className="text-[14.5px] font-extrabold text-[var(--text-primary)] truncate">
-                    {activeChannel.isDirectMessage ? activeChannel.dmPeerName : activeChannel.name}
-                  </h3>
-                  {activeChannel.category === 'authority' && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-[4px] bg-sky-500/20 text-sky-400 flex items-center gap-0.5 shrink-0">
-                      <ShieldCheck className="w-3 h-3" />
-                      <span>Official</span>
+                  {/* Group / Official Sub-badge */}
+                  {isOfficial && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-[var(--tile)]">
+                      ✓
+                    </span>
+                  )}
+                  {isGroup && !isOfficial && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--tile-active)] text-[var(--text-sub)] flex items-center justify-center text-[10px] ring-2 ring-[var(--tile)]">
+                      <Users className="w-2.5 h-2.5" />
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-[var(--text-secondary)] truncate">
-                  {activeChannel.category === 'authority'
-                    ? 'official broadcast channel • 1,420 members'
-                    : activeChannel.privacySphere === 'student_commons'
-                    ? 'student commons · shielded from surveillance • 28 members'
-                    : 'end-to-end encrypted direct dispatch'}
-                </p>
+
+                {/* Chat Information */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                    <span className="text-[14px] font-semibold text-[var(--text)] truncate">
+                      {ch.isDirectMessage ? ch.dmPeerName : ch.name}
+                    </span>
+                    <span className="text-[11px] text-[var(--meta)] font-mono shrink-0">
+                      {ch.lastMessageTime || (isOfficial ? '8:15 AM' : '12:41 AM')}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1 min-w-0 text-[12.5px] text-[var(--text-sub)] truncate">
+                      {ch.lastMessageStatus === 'read' && (
+                        <span className="text-[#38BDF8] text-[11px] font-bold shrink-0">✓✓</span>
+                      )}
+                      {ch.hasMedia && <Camera className="w-3.5 h-3.5 shrink-0 text-[var(--text-sub)]" />}
+                      <span className="truncate">
+                        {ch.lastMessage ||
+                          (isOfficial
+                            ? 'Official Circular: Fabrication Annex Bay 3 extended...'
+                            : 'Another day another plate of vomit but with noodles today')}
+                      </span>
+                    </div>
+
+                    {ch.unreadCount > 0 && !isSelected && (
+                      <span className="px-1.5 py-0.2 min-w-[18px] text-center rounded-full bg-[#EF4444] text-white text-[11px] font-extrabold shrink-0 shadow-xs">
+                        {ch.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
+            );
+          })}
+
+          {filteredChannels.length === 0 && (
+            <div className="p-8 text-center text-[13px] text-[var(--meta)]">
+              No chats match your filter.
             </div>
+          )}
+        </div>
 
-            {/* Right Action Icons: Prominent ✨ AI Quick Digest button */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setAiDigestModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-[12px] bg-[var(--accent)] text-white hover:opacity-95 text-[12px] font-extrabold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                title="Open AI Quick Digest of channel announcements and deadlines"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                <span>AI Digest</span>
-              </button>
+        {/* Bottom Signature End-to-End Encryption Banner */}
+        <div className="px-4 py-2 border-t border-[var(--rule)] bg-[var(--tile)] flex items-center justify-center gap-1.5 text-[11px] text-[var(--meta)]">
+          <Lock className="w-3 h-3 text-[var(--meta)]" />
+          <span>
+            Your personal messages are{' '}
+            <span className="text-[var(--accent)] font-medium">end-to-end encrypted</span>
+          </span>
+        </div>
+      </div>
 
-              <button
-                type="button"
-                onClick={() => setKnowledgeResolverOpen(true)}
-                className="p-2 rounded-[10px] bg-[var(--canvas)] border border-[var(--rule-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-                title="Campus Knowledge Resolver"
-              >
-                <Bot className="w-4 h-4 text-sky-400" />
-              </button>
+      {/* ================= COLUMN 3: RIGHT ACTIVE CHAT CONVERSATION PANE ================= */}
+      <div className={`flex-1 flex flex-col bg-[var(--bg)] relative min-w-0 min-h-0 h-full overflow-hidden ${!mobileChatOpen ? 'hidden md:flex' : 'flex'}`}>
+        {/* Chat Header */}
+        <div className="px-3 sm:px-4 py-2.5 bg-[var(--tile)] border-b border-[var(--rule)] flex items-center justify-between gap-2 sm:gap-3 shrink-0 z-10 shadow-xs">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Mobile Back Button */}
+            <button
+              type="button"
+              onClick={() => setMobileChatOpen(false)}
+              className="md:hidden p-1.5 -ml-1 text-[var(--text-sub)] hover:text-[var(--text)] rounded-full hover:bg-[var(--tile-active)] shrink-0 cursor-pointer"
+              title="Back to Channels"
+            >
+              <ArrowLeft className="w-5 h-5 text-[var(--accent)]" />
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setPrivacyModalOpen(true)}
-                className="p-2 rounded-[10px] bg-[var(--canvas)] border border-[var(--rule-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-                title="Inspect Privacy & Security"
-              >
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              </button>
+            {/* Header Avatar */}
+            {activeChannel.avatarUrl ? (
+              <img
+                src={activeChannel.avatarUrl}
+                alt={activeChannel.name}
+                className="w-10 h-10 rounded-full object-cover border border-[var(--rule)] shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[var(--track)] border border-[var(--rule)] text-[var(--text)] flex items-center justify-center font-bold text-[13px] shrink-0">
+                {activeChannel.category === 'authority' ? (
+                  <Building2 className="w-5 h-5 text-[var(--accent)]" />
+                ) : (
+                  getChannelInitials(activeChannel)
+                )}
+              </div>
+            )}
+
+            <div className="min-w-0">
+              <h3 className="text-[15px] font-bold text-[var(--text)] leading-tight truncate">
+                {activeChannel.isDirectMessage ? activeChannel.dmPeerName : activeChannel.name}
+              </h3>
+              <p className="text-[11.5px] text-[var(--text-sub)] truncate mt-0.5">
+                {activeChannel.participantsSnippet ||
+                  (activeChannel.category === 'authority'
+                    ? '1,420 subscribers · Official verified decrees'
+                    : '+880 1894-634119, +880 1894-634220, +880 1976-282828, You')}
+              </p>
             </div>
           </div>
 
-          {/* Chat Messages Body with WhatsApp/Telegram Bubbles */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 no-scrollbar">
-            {/* Centered Date Badge */}
-            <div className="flex justify-center my-1">
-              <span className="px-3 py-0.5 rounded-full bg-[var(--card)] border border-[var(--rule-default)] text-[10.5px] font-mono font-semibold text-[var(--text-secondary)]">
-                Today, September 19
-              </span>
+          {/* Right Action Icons: Video Call, Search, AI Quick Digest, Options */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => showToast('Simulating secure peer video connection...')}
+              className="p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] transition-colors cursor-pointer flex items-center gap-0.5"
+              title="Video Call"
+            >
+              <Video className="w-5 h-5" />
+              <ChevronDown className="w-3 h-3 opacity-60" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => showToast('Search inside active conversation')}
+              className="p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] transition-colors cursor-pointer"
+              title="Search in chat"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            {/* AI Digest Button */}
+            <button
+              type="button"
+              onClick={() => setAiDigestModalOpen(true)}
+              className="px-3 py-1 rounded-[10px] bg-[var(--accent)] hover:bg-[#E8684D] text-white text-[12px] font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+              title="AI Digest of announcements and actionable tasks"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-current" />
+              <span className="hidden sm:inline">AI Digest</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPrivacyModalOpen(true)}
+              className="p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] transition-colors cursor-pointer"
+              title="Inspect Privacy Charter"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Chat Wallpaper Background */}
+        <div
+          ref={chatContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 relative no-scrollbar"
+          style={{
+            backgroundColor: 'var(--bg)',
+            backgroundImage: `radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.025) 1px, transparent 1px)`,
+            backgroundSize: '24px 24px',
+          }}
+        >
+          {/* Centered Date Pill (Matching Screenshot "Yesterday", "Today") */}
+          <div className="flex justify-center my-2">
+            <span className="px-3.5 py-1 rounded-lg bg-[var(--tile-active)] border border-[var(--rule)] text-[11px] font-semibold text-[var(--text-sub)] shadow-sm uppercase tracking-wider">
+              Yesterday
+            </span>
+          </div>
+
+          {/* Blocked by Anti-Surveillance Gate Check */}
+          {isBlockedBySurveillanceShield ? (
+            <div className="p-8 rounded-[20px] bg-[var(--tile)] border border-[var(--accent)]/40 text-center max-w-md mx-auto my-12 shadow-2xl">
+              <ShieldAlert className="w-10 h-10 text-[var(--accent)] mx-auto mb-2" />
+              <h4 className="text-[16px] font-bold text-[var(--text)]">
+                Zero-Surveillance Shield Active
+              </h4>
+              <p className="text-[12.5px] text-[var(--text-sub)] mt-1.5 leading-relaxed">
+                Under the Stele Campus Charter, informal student commons and peer dispatches are strictly shielded from administrative, teacher, or authority surveillance.
+              </p>
             </div>
+          ) : (
+            <>
+              {channelMessages.map((msg) => {
+                const isMe = msg.senderName === studentName || msg.senderRole === 'aspirant';
+                const isOfficial = msg.isOfficial || activeChannel.category === 'authority';
 
-            {/* Blocked by Surveillance Gate Check */}
-            {isBlockedBySurveillanceShield ? (
-              <div className="p-8 rounded-[20px] bg-[var(--card)] border border-amber-500/40 text-center max-w-md mx-auto my-12 shadow-lg">
-                <ShieldAlert className="w-10 h-10 text-amber-400 mx-auto mb-2" />
-                <h4 className="text-[16px] font-bold text-[var(--text-primary)]">
-                  Zero-Surveillance Shield Active
-                </h4>
-                <p className="text-[12.5px] text-[var(--text-secondary)] mt-1 leading-relaxed">
-                  Under the Stele Campus Charter, informal student commons and peer dispatches are strictly shielded from administrative, teacher, or authority surveillance.
-                </p>
-              </div>
-            ) : (
-              <>
-                {channelMessages.map((msg) => {
-                  const isMe = msg.senderName === studentName;
-                  const isOfficialBroadcast = msg.isOfficial || activeChannel.category === 'authority';
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex items-start gap-2.5 group ${isMe ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {/* Peer Avatar on Left for Group Chats */}
+                    {!isMe && (
+                      <img
+                        src={
+                          msg.senderAvatar ||
+                          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'
+                        }
+                        alt={msg.senderName}
+                        className="w-7 h-7 rounded-full object-cover border border-[var(--rule)] shrink-0 mt-0.5 shadow-xs"
+                      />
+                    )}
 
-                  // TELEGRAM BROADCAST POST STYLE (For Official Notices)
-                  if (isOfficialBroadcast) {
-                    return (
+                    <div className="flex flex-col max-w-[85%] sm:max-w-[70%]">
+                      {/* Chat Bubble (Harmonized with Stele) */}
                       <div
-                        key={msg.id}
-                        className="max-w-2xl mx-auto p-4 rounded-[18px] bg-[var(--card)] border border-sky-500/30 shadow-xs flex flex-col gap-2.5"
+                        className={`relative rounded-[12px] p-2.5 sm:p-3 text-[13.5px] shadow-md transition-all ${
+                          isMe
+                            ? 'bg-[#2B2321] text-[var(--text)] border border-[var(--accent)]/40 rounded-tr-[2px]'
+                            : 'bg-[var(--tile-active)] text-[var(--text)] rounded-tl-[2px] border border-[var(--rule)]'
+                        }`}
                       >
-                        <div className="flex items-center justify-between pb-2 border-b border-[var(--rule-default)]">
-                          <div className="flex items-center gap-2.5">
+                        {/* Group Sender Name with Phone Number */}
+                        {!isMe && (
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className={`text-[12px] font-bold ${getSenderColor(
+                                msg.senderName,
+                                msg.senderRole
+                              )}`}
+                            >
+                              ~ {msg.senderName}
+                            </span>
+                            <span className="text-[10px] text-[var(--meta)] font-mono">
+                              {msg.senderPhone || '+880 1711-711758'}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Quoted Message (Replied-to box) */}
+                        {msg.replyTo && (
+                          <div className="mb-2 p-2 rounded-[8px] bg-[var(--tile)] border-l-4 border-l-[var(--accent)] text-[11.5px] leading-snug">
+                            <span className="font-bold text-[var(--accent)] block">
+                              ~ {msg.replyTo.senderName}
+                            </span>
+                            <span className="text-[var(--text-sub)] line-clamp-1">{msg.replyTo.text}</span>
+                          </div>
+                        )}
+
+                        {/* Media Attachment (Photo of noodles bowl / meme) */}
+                        {msg.mediaUrl && (
+                          <div className="mb-2 rounded-[10px] overflow-hidden border border-[var(--rule)] relative bg-black/40">
                             <img
-                              src={msg.senderAvatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'}
-                              alt={msg.senderName}
-                              className="w-8 h-8 rounded-full object-cover border border-sky-400"
+                              src={msg.mediaUrl}
+                              alt={msg.mediaCaption || 'Media attachment'}
+                              className="w-full max-h-72 object-cover hover:scale-102 transition-transform cursor-pointer"
+                              onClick={() => setSelectedImagePreview(msg.mediaUrl!)}
                             />
-                            <div>
-                              <span className="text-[13px] font-bold text-[var(--text-primary)] block">
-                                {msg.senderName}
-                              </span>
-                              <span className="text-[10px] text-sky-400 font-bold">
-                                Official Circular
-                              </span>
+                            {/* Overlay hover reaction buttons */}
+                            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-full text-[11px] text-white">
+                              <Smile className="w-3 h-3 text-[var(--accent)]" />
+                              <span>React</span>
                             </div>
                           </div>
-                          <span className="text-[11px] font-mono text-[var(--text-secondary)]">
-                            {msg.timestamp}
-                          </span>
-                        </div>
+                        )}
 
-                        <p className="text-[13px] text-[var(--text-primary)] leading-relaxed">
+                        {/* Message Content Text */}
+                        <p className="leading-relaxed whitespace-pre-wrap break-words">
                           {msg.content}
                         </p>
 
+                        {/* Actionable Campus Requirement Banner (Convert to Sovereign Board Task) */}
                         {msg.actionableTask && (
-                          <div className="p-3 rounded-[12px] bg-[var(--canvas)] border border-amber-500/30 flex items-center justify-between gap-3">
+                          <div className="mt-2.5 p-2.5 rounded-[10px] bg-[var(--tile)] border border-[var(--accent)]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
                             <div>
-                              <span className="text-[10.5px] uppercase font-bold text-amber-400 font-mono block">
-                                Actionable Requirement
-                              </span>
-                              <span className="text-[12.5px] font-bold text-[var(--text-primary)]">
+                              <div className="flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+                                <span className="text-[10px] font-mono uppercase font-bold text-[var(--accent)]">
+                                  Actionable Commitment
+                                </span>
+                              </div>
+                              <span className="text-[12.5px] font-bold text-[var(--text)] block mt-0.5">
                                 {msg.actionableTask.title}
                               </span>
-                              <span className="text-[11px] text-[var(--text-secondary)] block font-mono">
-                                Deadline: {msg.actionableTask.deadline} · +{msg.actionableTask.points} points
+                              <span className="text-[11px] text-[var(--meta)] font-mono">
+                                Deadline: {msg.actionableTask.deadline} · +{msg.actionableTask.points} pts
                               </span>
                             </div>
                             <button
@@ -542,228 +908,286 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
                                 });
                                 showToast('Task committed to Sovereign Board!');
                               }}
-                              className="px-3 py-1 rounded-[8px] bg-[var(--accent)] text-white text-[11.5px] font-bold hover:opacity-90 cursor-pointer shrink-0"
+                              className="px-3 py-1 rounded-[8px] bg-[var(--accent)] hover:bg-[#E8684D] text-white text-[11.5px] font-bold transition-all shadow-xs cursor-pointer shrink-0"
                             >
-                              Commit
+                              Commit ✓
                             </button>
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between text-[10.5px] text-[var(--text-secondary)] pt-1">
-                          <span className="flex items-center gap-1 font-mono">
-                            <Eye className="w-3 h-3" /> 1,420 views
-                          </span>
-                          <span className="font-mono flex items-center gap-1 text-sky-400">
-                            ✓✓ Verified
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  // WHATSAPP CHAT BUBBLE STYLE (For Peer & Section Chats)
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex flex-col group ${isMe ? 'items-end' : 'items-start'}`}
-                    >
-                      <div
-                        className={`relative max-w-[82%] sm:max-w-[70%] p-3 rounded-[16px] shadow-xs text-[13px] ${
-                          isMe
-                            ? 'bg-[var(--accent)] text-white rounded-tr-none'
-                            : 'bg-[var(--card)] border border-[var(--rule-default)] text-[var(--text-primary)] rounded-tl-none'
-                        }`}
-                      >
-                        {/* Sender name for other peers (like Telegram groups) */}
-                        {!isMe && (
-                          <span
-                            className={`block text-[11.5px] font-bold mb-1 ${getSenderColor(
-                              msg.senderRole
-                            )}`}
-                          >
-                            {msg.senderName}
-                          </span>
-                        )}
-
-                        <p className="leading-relaxed break-words">{msg.content}</p>
-
-                        {/* Timestamp & double checks */}
-                        <div
-                          className={`flex items-center justify-end gap-1 mt-1 text-[10px] font-mono ${
-                            isMe ? 'text-white/80' : 'text-[var(--text-secondary)]'
-                          }`}
-                        >
+                        {/* Timestamp & Double Checkmarks (Blue ticks) */}
+                        <div className="flex items-center justify-end gap-1 mt-1 text-[10.5px] font-mono text-[var(--meta)]">
                           <span>{msg.timestamp}</span>
-                          {isMe && <span>✓✓</span>}
+                          {isMe && (
+                            <span className="text-[#38BDF8] text-[11px] font-bold ml-0.5">
+                              ✓✓
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* AI Action Extract button on hover for peer messages with potential tasks */}
-                      {!isMe && !msg.isOfficial && (
-                        <button
-                          type="button"
-                          onClick={() => handleAiExtract(msg)}
-                          disabled={aiExtracting === msg.id}
-                          className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity text-[11px] font-bold text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer pl-1"
-                        >
-                          <Sparkles className="w-3 h-3 text-amber-400" />
-                          <span>{aiExtracting === msg.id ? 'Extracting...' : '✨ AI Extract Task'}</span>
-                        </button>
+                      {/* Quick AI Task Extraction on hover for peer messages */}
+                      {!isMe && !msg.actionableTask && (
+                        <div className="flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity pl-1">
+                          <button
+                            type="button"
+                            onClick={() => handleAiExtract(msg)}
+                            disabled={aiExtracting === msg.id}
+                            className="text-[11px] font-semibold text-[var(--accent)] hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <Sparkles className="w-3 h-3 text-[var(--accent)]" />
+                            <span>
+                              {aiExtracting === msg.id ? 'Extracting...' : 'Extract Task to Board'}
+                            </span>
+                          </button>
+                        </div>
                       )}
                     </div>
-                  );
-                })}
-              </>
-            )}
-          </div>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </>
+          )}
 
-          {/* WhatsApp Style Bottom Input Bar */}
-          {!isBlockedBySurveillanceShield && (
-            <form
-              onSubmit={handleSend}
-              className="p-2.5 sm:p-3 border-t border-[var(--rule-default)] bg-[var(--card)] flex items-center gap-2 shrink-0"
+          {/* Floating Scroll to Bottom Button */}
+          {isScrolledUp && (
+            <button
+              type="button"
+              onClick={scrollToBottom}
+              className="sticky bottom-3 float-right w-10 h-10 rounded-full bg-[var(--tile-active)] text-[var(--text-sub)] hover:text-[var(--text)] border border-[var(--rule)] shadow-2xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer z-20"
+              title="Scroll to bottom"
             >
+              <ChevronDown className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Bottom Input Bar */}
+        {!isBlockedBySurveillanceShield && (
+          <div className="bg-[var(--tile)] border-t border-[var(--rule)] p-2.5 sm:px-4 relative shrink-0">
+            {/* Quick Emoji Bar Popup */}
+            {showEmojiPicker && (
+              <div className="absolute bottom-16 left-4 p-2 rounded-[14px] bg-[var(--tile-active)] border border-[var(--rule)] shadow-2xl flex items-center gap-1.5 z-30 animate-in fade-in duration-150">
+                {QUICK_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      setDraftMessage((prev) => prev + emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                    className="w-8 h-8 rounded-lg hover:bg-[var(--track)] text-[18px] flex items-center justify-center transition-transform hover:scale-125 cursor-pointer"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Quick Attachment Menu */}
+            {showAttachMenu && (
+              <div className="absolute bottom-16 left-12 w-48 rounded-[14px] bg-[var(--tile-active)] border border-[var(--rule)] shadow-2xl p-2 z-30 text-[13px] animate-in fade-in duration-150 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    setKnowledgeResolverOpen(true);
+                  }}
+                  className="w-full px-3 py-2 rounded-lg hover:bg-[var(--track)] flex items-center gap-2.5 text-left text-[var(--text)]"
+                >
+                  <FileText className="w-4 h-4 text-[var(--accent)]" />
+                  <span>Document / Notes</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    showToast('Photo & video picker opened');
+                  }}
+                  className="w-full px-3 py-2 rounded-lg hover:bg-[var(--track)] flex items-center gap-2.5 text-left text-[var(--text)]"
+                >
+                  <ImageIcon className="w-4 h-4 text-[#38bdf8]" />
+                  <span>Photos &amp; Videos</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAttachMenu(false);
+                    showToast('Camera scanner ready');
+                  }}
+                  className="w-full px-3 py-2 rounded-lg hover:bg-[var(--track)] flex items-center gap-2.5 text-left text-[var(--text)]"
+                >
+                  <Camera className="w-4 h-4 text-[#ec4899]" />
+                  <span>Camera</span>
+                </button>
+              </div>
+            )}
+
+            {/* Main Input Form */}
+            <form onSubmit={handleSend} className="flex items-center gap-2">
+              {/* Paperclip / Attachment Button */}
               <button
                 type="button"
-                onClick={() => setKnowledgeResolverOpen(true)}
-                className="p-2 rounded-full text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--canvas)] transition-colors cursor-pointer"
-                title="Attach Knowledge File"
+                onClick={() => {
+                  setShowAttachMenu(!showAttachMenu);
+                  setShowEmojiPicker(false);
+                }}
+                className={`p-2 rounded-full transition-colors cursor-pointer ${
+                  showAttachMenu ? 'text-[var(--accent)] bg-[var(--tile-active)]' : 'text-[var(--text-sub)] hover:text-[var(--text)]'
+                }`}
+                title="Attach"
               >
-                <Paperclip className="w-4 h-4" />
+                <Paperclip className="w-5 h-5" />
               </button>
 
+              {/* Emoji Picker Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEmojiPicker(!showEmojiPicker);
+                  setShowAttachMenu(false);
+                }}
+                className={`p-2 rounded-full transition-colors cursor-pointer ${
+                  showEmojiPicker ? 'text-[var(--accent)] bg-[var(--tile-active)]' : 'text-[var(--text-sub)] hover:text-[var(--text)]'
+                }`}
+                title="Emoji"
+              >
+                <Smile className="w-5 h-5" />
+              </button>
+
+              {/* Text Input */}
               <input
                 type="text"
                 value={draftMessage}
                 onChange={(e) => setDraftMessage(e.target.value)}
-                placeholder="Type a sovereign dispatch..."
-                className="flex-1 px-4 py-2 rounded-full bg-[var(--canvas)] border border-[var(--rule-default)] text-[13px] text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-all"
+                placeholder="Type a message"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-[var(--track)] text-[14px] text-[var(--text)] placeholder-[var(--meta)] outline-none border border-[var(--rule)] focus:border-[var(--accent)] transition-all"
               />
 
-              <button
-                type="submit"
-                disabled={!draftMessage.trim()}
-                className={`p-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0 ${
-                  draftMessage.trim()
-                    ? 'bg-[var(--accent)] text-white shadow-md active:scale-95'
-                    : 'bg-[var(--canvas)] text-[var(--text-muted)] opacity-50 cursor-not-allowed'
-                }`}
-                title="Send dispatch"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+              {/* Voice Note / Send Button */}
+              {draftMessage.trim() ? (
+                <button
+                  type="submit"
+                  className="w-10 h-10 rounded-full bg-[var(--accent)] hover:bg-[#E8684D] text-white flex items-center justify-center font-bold shadow-md transition-transform active:scale-95 cursor-pointer shrink-0"
+                  title="Send"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => showToast('Hold to record sovereign audio dispatch')}
+                  className="p-2.5 rounded-full text-[var(--text-sub)] hover:text-[var(--text)] hover:bg-[var(--tile-active)] transition-colors cursor-pointer shrink-0"
+                  title="Voice Message"
+                >
+                  <Mic className="w-5 h-5" />
+                </button>
+              )}
             </form>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* ================= MODAL: AI QUICK DIGEST ================= */}
       {aiDigestModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-[22px] bg-[var(--card)] border border-[var(--rule-default)] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-[22px] bg-[var(--tile)] border border-[var(--rule)] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="p-4 border-b border-[var(--rule-default)] bg-[var(--canvas)] flex items-center justify-between">
+            <div className="p-4 border-b border-[var(--rule)] bg-[var(--tile-active)] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-[10px] bg-[var(--accent)]/15 flex items-center justify-center text-[var(--accent)]">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <Sparkles className="w-4 h-4 fill-current" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-extrabold text-[var(--text-primary)]">
-                    AI Channel Quick Digest
+                  <h3 className="text-[15px] font-bold text-[var(--text)]">
+                    AI Quick Digest · {activeChannel.name}
                   </h3>
-                  <span className="text-[11px] text-[var(--text-secondary)] font-mono">
-                    {activeChannel.name}
+                  <span className="text-[11px] text-[var(--meta)] font-mono">
+                    Synthesized from last 24h peer &amp; official dispatches
                   </span>
                 </div>
               </div>
-
               <button
                 type="button"
                 onClick={() => setAiDigestModalOpen(false)}
-                className="p-1.5 rounded-[8px] hover:bg-[var(--canvas)] text-[var(--text-secondary)] cursor-pointer"
+                className="p-1 rounded-full text-[var(--meta)] hover:text-[var(--text)] hover:bg-[var(--track)]"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Digest Body */}
-            <div className="p-5 space-y-4">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)] font-mono block mb-2">
-                  Key Takeaways (Synthesized by Local AI)
+            {/* Body */}
+            <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto no-scrollbar">
+              <div className="space-y-2.5">
+                <span className="text-[11.5px] font-bold uppercase tracking-wider text-[var(--accent)] font-mono block">
+                  Key Discussion Highlights
                 </span>
-                <div className="space-y-2">
-                  {channelDigest.bullets.map((bullet, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2.5 rounded-[12px] bg-[var(--canvas)] border border-[var(--rule-default)] text-[12.5px] text-[var(--text-primary)] leading-relaxed flex items-start gap-2"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-1.5 shrink-0" />
-                      <span>{bullet}</span>
-                    </div>
-                  ))}
-                </div>
+                {channelDigest.bullets.map((b, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-[12px] bg-[var(--tile-active)] border border-[var(--rule)] text-[13px] text-[var(--text)] leading-relaxed flex items-start gap-2.5"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 shrink-0" />
+                    <span>{b}</span>
+                  </div>
+                ))}
               </div>
 
               {channelDigest.tasks.length > 0 && (
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 font-mono block mb-2">
-                    Extracted Action Items &amp; Deadlines
+                <div className="space-y-2 pt-2 border-t border-[var(--rule)]">
+                  <span className="text-[11.5px] font-bold uppercase tracking-wider text-amber-400 font-mono block">
+                    Actionable Deadlines
                   </span>
-                  <div className="space-y-2">
-                    {channelDigest.tasks.map((task, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3 rounded-[12px] bg-amber-500/10 border border-amber-500/20 flex items-center justify-between gap-2"
-                      >
-                        <div>
-                          <span className="text-[12.5px] font-bold text-[var(--text-primary)] block">
-                            {task.title}
-                          </span>
-                          <span className="text-[11px] text-[var(--text-secondary)] font-mono">
-                            Deadline: {task.deadline} · +{task.points} pts
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onConvertToActionableTask({
-                              title: task.title,
-                              deadline: task.deadline,
-                              points: task.points,
-                              channelName: activeChannel.name,
-                            });
-                            showToast('Task committed to Sovereign Board!');
-                          }}
-                          className="px-3 py-1 rounded-[8px] bg-[var(--accent)] text-white text-[11.5px] font-bold hover:opacity-90 cursor-pointer whitespace-nowrap"
-                        >
-                          Commit +{task.points}p
-                        </button>
+                  {channelDigest.tasks.map((t, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-[12px] bg-[var(--tile-active)] border border-amber-500/30 flex items-center justify-between gap-3"
+                    >
+                      <div>
+                        <span className="text-[13px] font-bold text-[var(--text)] block">
+                          {t.title}
+                        </span>
+                        <span className="text-[11px] text-[var(--meta)] font-mono">
+                          {t.deadline} · +{t.points} points
+                        </span>
                       </div>
-                    ))}
-                  </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onConvertToActionableTask({
+                            title: t.title,
+                            deadline: t.deadline,
+                            points: t.points,
+                            channelName: activeChannel.name,
+                          });
+                          showToast('Task added to Sovereign Board!');
+                        }}
+                        className="px-3 py-1 rounded-[8px] bg-[var(--accent)] hover:bg-[#E8684D] text-white text-[11.5px] font-bold transition-all shadow-xs shrink-0 cursor-pointer"
+                      >
+                        Claim
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className="p-3.5 border-t border-[var(--rule-default)] bg-[var(--canvas)] flex items-center justify-between">
+            <div className="p-3.5 bg-[var(--tile-active)] border-t border-[var(--rule)] flex items-center justify-between">
               <button
                 type="button"
                 onClick={handleCopyDigest}
-                className="px-3 py-1.5 rounded-[10px] bg-[var(--card)] border border-[var(--rule-default)] hover:border-[var(--accent)] text-[12px] font-semibold text-[var(--text-primary)] flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-[10px] bg-[var(--tile)] border border-[var(--rule)] hover:border-[var(--accent)] text-[12px] font-semibold text-[var(--text)] flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                {copiedDigest ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedDigest ? <Check className="w-3.5 h-3.5 text-[var(--accent)]" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedDigest ? 'Copied' : 'Copy Digest'}</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => {
-                  setAiDigestModalOpen(false);
-                  showToast('Channel marked as digested');
-                }}
-                className="px-4 py-1.5 rounded-[10px] bg-[var(--accent)] text-white text-[12px] font-bold hover:opacity-90 cursor-pointer"
+                onClick={() => setAiDigestModalOpen(false)}
+                className="px-4 py-1.5 rounded-[10px] bg-[var(--accent)] hover:bg-[#E8684D] text-white text-[12.5px] font-bold transition-all cursor-pointer"
               >
                 Done
               </button>
@@ -771,99 +1195,121 @@ export const CampusDispatchesHub: React.FC<CampusDispatchesHubProps> = ({
           </div>
         </div>
       )}
-
-      {/* ================= MODAL: CAMPUS KNOWLEDGE RESOLVER ================= */}
+      {/* ================= MODAL: KNOWLEDGE RESOLVER ================= */}
       {knowledgeResolverOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-[22px] bg-[var(--card)] border border-[var(--rule-default)] shadow-2xl overflow-hidden animate-in fade-in duration-200">
-            <div className="p-4 border-b border-[var(--rule-default)] bg-[var(--canvas)] flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-[22px] bg-[var(--tile)] border border-[var(--rule)] shadow-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--rule)] pb-3">
               <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-sky-400" />
-                <h3 className="text-[15px] font-extrabold text-[var(--text-primary)]">
+                <Bot className="w-5 h-5 text-[#38bdf8]" />
+                <h3 className="text-[16px] font-bold text-[var(--text)]">
                   Campus Knowledge Resolver
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setKnowledgeResolverOpen(false)}
-                className="p-1.5 rounded-[8px] hover:bg-[var(--canvas)] text-[var(--text-secondary)] cursor-pointer"
+                className="p-1 rounded-full text-[var(--meta)] hover:text-[var(--text)]"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4">
+            <div className="relative">
+              <Search className="w-4 h-4 text-[var(--meta)] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={knowledgeSearch}
                 onChange={(e) => setKnowledgeSearch(e.target.value)}
-                placeholder="Search campus rules, lab hours, syllabus policies..."
-                className="w-full px-3.5 py-2 rounded-[12px] bg-[var(--canvas)] border border-[var(--rule-default)] text-[12.5px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                placeholder="Query institutional rules, lab bays, schedules..."
+                className="w-full pl-9 pr-3 py-2 rounded-[12px] bg-[var(--track)] border border-[var(--rule)] text-[13px] text-[var(--text)] placeholder-[var(--meta)] outline-none focus:border-[var(--accent)]"
               />
+            </div>
 
-              <div className="mt-3 max-h-72 overflow-y-auto space-y-2 no-scrollbar">
-                {INSTITUTIONAL_KNOWLEDGE_BASE.filter(
-                  (k) =>
-                    !knowledgeSearch ||
-                    k.question.toLowerCase().includes(knowledgeSearch.toLowerCase()) ||
-                    k.answer.toLowerCase().includes(knowledgeSearch.toLowerCase())
-                ).map((k) => (
-                  <div key={k.id} className="p-3 rounded-[12px] bg-[var(--canvas)] border border-[var(--rule-default)]">
-                    <span className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase block">
-                      {k.category} · {k.sourceDoc}
-                    </span>
-                    <span className="text-[12.5px] font-bold text-[var(--text-primary)] block mt-0.5">
-                      {k.question}
-                    </span>
-                    <p className="text-[11.5px] text-[var(--text-secondary)] mt-1">
-                      {k.answer}
-                    </p>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-2.5 max-h-72 overflow-y-auto no-scrollbar">
+              {INSTITUTIONAL_KNOWLEDGE_BASE.filter(
+                (k) =>
+                  !knowledgeSearch ||
+                  k.question.toLowerCase().includes(knowledgeSearch.toLowerCase()) ||
+                  k.answer.toLowerCase().includes(knowledgeSearch.toLowerCase())
+              ).map((k) => (
+                <div key={k.id} className="p-3.5 rounded-[14px] bg-[var(--tile-active)] border border-[var(--rule)]">
+                  <span className="text-[13px] font-bold text-[var(--accent)] block mb-1">
+                    {k.question}
+                  </span>
+                  <p className="text-[12px] text-[var(--text-sub)] leading-relaxed">{k.answer}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* ================= MODAL: ANTI-SURVEILLANCE CHARTER ================= */}
+      {/* ================= MODAL: PRIVACY & CHARTER ================= */}
       {privacyModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-[22px] bg-[var(--card)] border border-[var(--rule-default)] shadow-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-[22px] bg-[var(--tile)] border border-[var(--rule)] shadow-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--rule)] pb-3">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-[16px] font-extrabold text-[var(--text-primary)]">
+                <ShieldCheck className="w-5 h-5 text-[var(--accent)]" />
+                <h3 className="text-[16px] font-extrabold text-[var(--text)]">
                   Anti-Surveillance Charter
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setPrivacyModalOpen(false)}
-                className="p-1 rounded-[6px] hover:bg-[var(--canvas)] text-[var(--text-secondary)] cursor-pointer"
+                className="p-1 rounded-full text-[var(--meta)] hover:text-[var(--text)]"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-2.5 text-[12.5px] text-[var(--text-secondary)] leading-relaxed">
+            <div className="text-[13px] text-[var(--text-sub)] space-y-3 leading-relaxed">
               <p>
-                <strong className="text-[var(--text-primary)]">Zero Keyword Auditing:</strong> The institution does not monitor or index student discourse in commons or peer groups.
+                The Stele Sovereign Communication Subsystem implements cryptographic boundaries
+                guaranteeing student autonomy.
               </p>
-              <p>
-                <strong className="text-[var(--text-primary)]">Cryptographic Air-Gaps:</strong> Authority and faculty roles have zero access tokens into informal student channels.
-              </p>
-              <p>
-                <strong className="text-[var(--text-primary)]">Local AI Synthesis:</strong> Catch-up digests and action extraction operate locally on-device without telemetry.
-              </p>
+              <div className="p-3 rounded-[12px] bg-[var(--tile-active)] border border-[var(--accent)]/30 space-y-1.5 text-[12px]">
+                <span className="font-bold text-[var(--accent)] block">Autonomous Student Commons</span>
+                <p className="text-[var(--text)]">
+                  Student lounges and peer channels operate on local encryption keys. Teachers and
+                  administrators cannot access, inspect, or query student commons.
+                </p>
+              </div>
             </div>
 
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPrivacyModalOpen(false)}
+                className="px-4 py-2 rounded-[12px] bg-[var(--accent)] hover:bg-[#E8684D] text-white text-[12.5px] font-bold cursor-pointer transition-all"
+              >
+                Close Charter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= FULL IMAGE PREVIEW ================= */}
+      {selectedImagePreview && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setSelectedImagePreview(null)}
+        >
+          <div className="relative max-w-3xl max-h-[85vh]">
+            <img
+              src={selectedImagePreview}
+              alt="Enlarged media preview"
+              className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl"
+            />
             <button
               type="button"
-              onClick={() => setPrivacyModalOpen(false)}
-              className="w-full py-2 rounded-[12px] bg-[var(--accent)] text-white text-[12.5px] font-bold hover:opacity-90 cursor-pointer"
+              onClick={() => setSelectedImagePreview(null)}
+              className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black"
             >
-              Acknowledge Protection
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>

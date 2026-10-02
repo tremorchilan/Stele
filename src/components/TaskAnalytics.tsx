@@ -19,10 +19,22 @@ import {
 interface TaskAnalyticsProps {
   commitments: Commitment[];
   isDark?: boolean;
+  score?: number;
+  dailyStreak?: number;
+  onOpenProfile?: () => void;
 }
 
-export const TaskAnalytics: React.FC<TaskAnalyticsProps> = ({ commitments, isDark = true }) => {
+export const TaskAnalytics: React.FC<TaskAnalyticsProps> = ({
+  commitments,
+  isDark = true,
+  score = 685,
+  dailyStreak = 3,
+  onOpenProfile,
+}) => {
   const [timeHorizon, setTimeHorizon] = useState<'all' | '30d' | '7d'>('all');
+
+  const nextMilestone = 750;
+  const milestoneProgress = Math.min(100, Math.round((score / nextMilestone) * 100));
 
   // Compute analytics
   const metrics = useMemo(() => {
@@ -130,6 +142,105 @@ export const TaskAnalytics: React.FC<TaskAnalyticsProps> = ({ commitments, isDar
         </div>
       </div>
 
+      {/* Embedded Sovereign Reward Circuit & Streak Multiplier */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        {/* Reward Horizon & Score */}
+        <div
+          className="p-4 sm:p-5 rounded-[20px] bg-[var(--card)] border border-[rgba(255,255,255,0.07)] shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl transition-all duration-300 ease-out cursor-pointer"
+          onClick={onOpenProfile}
+          title="Inspect Sovereign Reward Circuit & Perks"
+        >
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>Sovereign Reward Circuit</span>
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10.5px] font-extrabold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30">
+              Tier III · Fellow
+            </span>
+          </div>
+
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-[30px] font-black tracking-tight text-[var(--text-primary)]">
+              {score}
+            </span>
+            <span className="text-[14px] font-bold text-[var(--accent)]">
+              PTS
+            </span>
+            <span className="text-[11px] text-[var(--text-muted)] ml-auto font-medium">
+              {milestoneProgress}% to next perk
+            </span>
+          </div>
+
+          <div className="w-full bg-[var(--track)] h-2 rounded-full overflow-hidden mb-2">
+            <div
+              className="bg-gradient-to-r from-[var(--orange)] to-[var(--accent)] h-full rounded-full transition-all duration-500"
+              style={{ width: `${milestoneProgress}%` }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-[11.5px] text-[var(--text-secondary)] font-medium pt-1">
+            <span>Next: Cafeteria Pass at 750 pts</span>
+            <span className="text-[var(--accent)] font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+              Inspect Perks &rarr;
+            </span>
+          </div>
+        </div>
+
+        {/* Consistency Streak Tracker */}
+        <div
+          className="p-4 sm:p-5 rounded-[20px] bg-[var(--card)] border border-[var(--rule-default)] shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-lg transition-all duration-200 cursor-pointer"
+          onClick={onOpenProfile}
+          title="Daily Consistency Streak · Tap to view history"
+        >
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--text-muted)] flex items-center gap-1.5">
+              <Flame className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B]/20" />
+              <span>Consistency Streak Engine</span>
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10.5px] font-extrabold bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30">
+              +15% Multiplier Active
+            </span>
+          </div>
+
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-[30px] font-black tracking-tight text-[var(--text-primary)]">
+              {dailyStreak}
+            </span>
+            <span className="text-[14px] font-bold text-[#F59E0B]">
+              DAYS ACTIVE
+            </span>
+            <span className="text-[11px] text-[var(--text-muted)] ml-auto font-mono">
+              Cadence: 100% On-Time
+            </span>
+          </div>
+
+          {/* 7-Day Visual Activity Bar */}
+          <div className="grid grid-cols-7 gap-1.5 mb-2 py-1">
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
+              const isActive = idx < dailyStreak;
+              return (
+                <div key={idx} className="flex flex-col items-center gap-1">
+                  <div
+                    className={`w-full h-1.5 rounded-full transition-colors ${
+                      isActive ? 'bg-[#F59E0B]' : 'bg-[var(--track)]'
+                    }`}
+                  />
+                  <span className="text-[9.5px] font-bold text-[var(--text-muted)]">
+                    {day}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between text-[11.5px] text-[var(--text-secondary)] font-medium pt-0.5">
+            <span>Delivered daily commitments without breaking chain</span>
+            <span className="text-[#F59E0B] font-bold">Unbroken</span>
+          </div>
+        </div>
+      </div>
+
       {/* Top 4 Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
         {/* Fulfillment Rate */}
@@ -166,8 +277,8 @@ export const TaskAnalytics: React.FC<TaskAnalyticsProps> = ({ commitments, isDar
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-            <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
-            <span className="text-red-400 font-semibold">{metrics.criticalCount} due &lt;24h</span>
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-400" />
+            <span className="text-amber-400 font-semibold">{metrics.criticalCount} due &lt;24h</span>
             <span>· {metrics.impendingCount} in 3d</span>
           </div>
           <span className="text-[11px] text-[var(--text-muted)] mt-2">
@@ -238,8 +349,8 @@ export const TaskAnalytics: React.FC<TaskAnalyticsProps> = ({ commitments, isDar
             {/* Critical */}
             <div>
               <div className="flex items-center justify-between text-[12.5px] mb-1">
-                <span className="font-semibold text-rose-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span className="font-semibold text-amber-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
                   Critical Horizon (&lt; 24 Hours)
                 </span>
                 <span className="font-mono font-bold text-[var(--text-primary)]">
@@ -248,7 +359,7 @@ export const TaskAnalytics: React.FC<TaskAnalyticsProps> = ({ commitments, isDar
               </div>
               <div className="w-full bg-[var(--canvas)] rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-rose-500 h-full rounded-full transition-all duration-500"
+                  className="bg-amber-500 h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${metrics.activeCount > 0 ? (metrics.criticalCount / metrics.activeCount) * 100 : 0}%`,
                   }}

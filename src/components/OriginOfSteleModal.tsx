@@ -19,13 +19,13 @@ export const OriginOfSteleModal: React.FC<OriginOfSteleModalProps> = ({
   return (
     <div
       id="origin-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/65 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/65 backdrop-blur-md android-popup-backdrop"
       onClick={onClose}
     >
       <div
         id="origin-modal-card"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[26px] p-6 sm:p-10 stele-glassmorphic-overlay transition-all text-[var(--text)]"
+        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[26px] p-6 sm:p-10 stele-glassmorphic-overlay text-[var(--text)] android-popup-widget"
         style={{
           background: 'rgba(26, 26, 32, 0.84)',
           backdropFilter: 'blur(28px) saturate(190%)',

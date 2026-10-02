@@ -130,7 +130,7 @@ export const ResourcesSyllabiView: React.FC<ResourcesSyllabiViewProps> = ({
       </div>
 
       {/* SYLLABUS REVISION NOTIFICATION CONTROL PANEL (User explicit requirement!) */}
-      <div className="p-4 sm:p-5 rounded-[20px] bg-gradient-to-r from-[var(--tile)] to-[var(--track)] border border-[rgba(255,255,255,0.08)] shadow-sm">
+      <div className="p-4 sm:p-5 rounded-[20px] bg-[var(--tile)] border border-[rgba(255,255,255,0.08)] shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start gap-3.5">
             <div

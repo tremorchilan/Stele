@@ -40,11 +40,11 @@ export const KnowledgeCaptureModal: React.FC<KnowledgeCaptureModalProps> = ({
   return (
     <div
       id="knowledge-capture-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md android-popup-backdrop"
     >
       <div
         id="knowledge-capture-modal"
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 rounded-[26px] stele-glassmorphic-overlay text-[var(--text)]"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 rounded-[26px] stele-glassmorphic-overlay text-[var(--text)] android-popup-widget"
         style={{
           background: 'rgba(26, 26, 32, 0.82)',
           backdropFilter: 'blur(28px) saturate(190%)',
